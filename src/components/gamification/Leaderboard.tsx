@@ -79,7 +79,7 @@ export default function Leaderboard({ leaderboard, currentUserId, onUserClick }:
               {getScopeText(leaderboard.type, leaderboard.scope)} Leaderboard
             </h3>
             <p className="text-sm text-gray-600">
-              {getPeriodText(leaderboard.period)} • Updated {leaderboard.updatedAt.toLocaleDateString()}
+              {getPeriodText(leaderboard.period)} • Updated {new Date(leaderboard.updatedAt).toLocaleDateString()}
             </p>
           </div>
           <div className="flex items-center text-gray-500 text-sm">

@@ -6,7 +6,7 @@ import { Award, Star, Crown, Zap } from 'lucide-react'
 interface BadgeCardProps {
   badge: Badge
   isEarned?: boolean
-  earnedAt?: Date
+  earnedAt?: string
   showProgress?: boolean
   progress?: number
 }
@@ -133,7 +133,7 @@ export default function BadgeCard({
         {/* Earned Date */}
         {isEarned && earnedAt && (
           <div className="text-xs text-gray-500">
-            Earned on {earnedAt.toLocaleDateString()}
+            Earned on {new Date(earnedAt).toLocaleDateString()}
           </div>
         )}
       </div>

@@ -3,7 +3,7 @@
 import { useUser } from '@clerk/nextjs'
 import { useUserRole } from '@/lib/auth'
 import { usePoints } from '@/contexts/PointsContext'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   Trophy, 
   Award, 
@@ -21,128 +21,174 @@ import {
 import BadgeCard from '@/components/gamification/BadgeCard'
 import Leaderboard from '@/components/gamification/Leaderboard'
 import { Badge, Leaderboard as LeaderboardType, LeaderboardEntry } from '@/types'
+import Link from 'next/link'
 
 export default function GamificationPage() {
-  const { isSignedIn } = useUser()
+  const { isSignedIn, user } = useUser()
   const { isStudent, isTeacher, isNGO } = useUserRole()
   const { totalPoints, level, badges } = usePoints()
   const [selectedTab, setSelectedTab] = useState<'badges' | 'leaderboard' | 'points'>('badges')
   const [badgeFilter, setBadgeFilter] = useState<string>('all')
   const [leaderboardFilter, setLeaderboardFilter] = useState<string>('class')
+  
+  // State for dynamic data
+  const [allBadges, setAllBadges] = useState<Badge[]>([])
+  const [leaderboardData, setLeaderboardData] = useState<{ [key: string]: LeaderboardType }>({})
+  const [pointsHistory, setPointsHistory] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState({
+    badges: true,
+    leaderboard: true,
+    points: true
+  })
 
-  // Mock data
-  const mockBadges: Badge[] = [
-    {
-      id: '1',
-      name: 'Eco Warrior',
-      description: 'Complete your first environmental task',
-      icon: '🌱',
-      pointsRequired: 100,
-      category: 'eco_action',
-      rarity: 'common'
-    },
-    {
-      id: '2',
-      name: 'Knowledge Seeker',
-      description: 'Complete 5 lessons',
-      icon: '📚',
-      pointsRequired: 250,
-      category: 'knowledge',
-      rarity: 'rare'
-    },
-    {
-      id: '3',
-      name: 'Community Leader',
-      description: 'Help 10 other students',
-      icon: '👥',
-      pointsRequired: 500,
-      category: 'leadership',
-      rarity: 'epic'
-    },
-    {
-      id: '4',
-      name: 'Climate Champion',
-      description: 'Earn 1000 eco-points',
-      icon: '🏆',
-      pointsRequired: 1000,
-      category: 'community',
-      rarity: 'legendary'
-    },
-    {
-      id: '5',
-      name: 'Recycling Master',
-      description: 'Complete all recycling tasks',
-      icon: '♻️',
-      pointsRequired: 300,
-      category: 'eco_action',
-      rarity: 'rare'
-    },
-    {
-      id: '6',
-      name: 'Quiz Expert',
-      description: 'Score 90%+ on 10 quizzes',
-      icon: '🧠',
-      pointsRequired: 400,
-      category: 'knowledge',
-      rarity: 'epic'
+  // Fetch all available badges
+  useEffect(() => {
+    async function fetchBadges() {
+      try {
+        setIsLoading(prev => ({ ...prev, badges: true }))
+        const response = await fetch('/api/badges?action=all')
+        const userBadgesResponse = await fetch('/api/badges?action=user')
+        
+        if (response.ok && userBadgesResponse.ok) {
+          const data = await response.json()
+          const userBadgesData = await userBadgesResponse.json()
+          
+          // Map user badges to include earnedAt information
+          const userBadgesMap = new Map()
+          if (userBadgesData.badges && Array.isArray(userBadgesData.badges)) {
+            userBadgesData.badges.forEach((badge: any) => {
+              userBadgesMap.set(badge.id, badge.earnedAt || new Date().toISOString())
+            })
+          }
+          
+          // Add earnedAt to all badges that the user has earned
+          const badgesWithEarnedInfo = (data.badges || []).map((badge: any) => {
+            if (userBadgesMap.has(badge.id)) {
+              return { ...badge, earnedAt: userBadgesMap.get(badge.id) }
+            }
+            return badge
+          })
+          
+          setAllBadges(badgesWithEarnedInfo)
+          setBadges(Array.from(userBadgesMap.keys()))
+        }
+      } catch (error) {
+        console.error('Error fetching badges:', error)
+      } finally {
+        setIsLoading(prev => ({ ...prev, badges: false }))
+      }
     }
-  ]
+    
+    fetchBadges()
+  }, [])
 
-  // Use context badges for earnedBadges, and mockBadges for display
-  const earnedBadges = badges // from context
-  const filteredBadges = mockBadges.filter(badge => {
+  // Fetch leaderboard data
+  useEffect(() => {
+    async function fetchLeaderboard() {
+      try {
+        setIsLoading(prev => ({ ...prev, leaderboard: true }))
+        const classResponse = await fetch('/api/leaderboard?scope=class')
+        const schoolResponse = await fetch('/api/leaderboard?scope=school')
+        const globalResponse = await fetch('/api/leaderboard?scope=global')
+        
+        const leaderboards: { [key: string]: LeaderboardType } = {}
+        
+        if (classResponse.ok) {
+          const data = await classResponse.json()
+          leaderboards.class = {
+            id: 'class-leaderboard',
+            type: 'class',
+            scope: 'class',
+            entries: data.data || [],
+            period: 'all_time',
+            updatedAt: new Date().toISOString()
+          }
+        }
+        
+        if (schoolResponse.ok) {
+          const data = await schoolResponse.json()
+          leaderboards.school = {
+            id: 'school-leaderboard',
+            type: 'school',
+            scope: 'school',
+            entries: data.data || [],
+            period: 'all_time',
+            updatedAt: new Date().toISOString()
+          }
+        }
+        
+        if (globalResponse.ok) {
+          const data = await globalResponse.json()
+          leaderboards.global = {
+            id: 'global-leaderboard',
+            type: 'global',
+            scope: 'global',
+            entries: data.data || [],
+            period: 'all_time',
+            updatedAt: new Date().toISOString()
+          }
+        }
+        
+        setLeaderboardData(leaderboards)
+      } catch (error) {
+        console.error('Error fetching leaderboard:', error)
+      } finally {
+        setIsLoading(prev => ({ ...prev, leaderboard: false }))
+      }
+    }
+    
+    fetchLeaderboard()
+  }, [])
+
+  // Fetch points history
+  useEffect(() => {
+    async function fetchPointsHistory() {
+      if (!isSignedIn) return
+      
+      try {
+        setIsLoading(prev => ({ ...prev, points: true }))
+        const response = await fetch('/api/progress')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success) {
+            // We'll use this data for the points tab
+            setPointsHistory(data.data.pointsByActivity || {})
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching points history:', error)
+      } finally {
+        setIsLoading(prev => ({ ...prev, points: false }))
+      }
+    }
+    
+    fetchPointsHistory()
+  }, [isSignedIn])
+
+  // Filter badges based on category
+  const filteredBadges = allBadges.filter(badge => {
     if (badgeFilter === 'all') return true
     return badge.category === badgeFilter
   })
 
-  const leaderboards: { [key: string]: LeaderboardType } = {
-    class: {
-      id: 'class-1',
-      type: 'class',
-      scope: 'class-1',
-      entries: [
-        { userId: '1', userName: 'Alex Johnson', ecoPoints: 2150, level: 5, badges: 8, rank: 1, avatar: '' },
-        { userId: '2', userName: 'Sarah Wilson', ecoPoints: 1890, level: 4, badges: 6, rank: 2, avatar: '' },
-        { userId: '3', userName: 'Mike Chen', ecoPoints: 1650, level: 4, badges: 5, rank: 3, avatar: '' },
-        { userId: '4', userName: 'Emma Davis', ecoPoints: 1420, level: 3, badges: 4, rank: 4, avatar: '' },
-        { userId: '5', userName: 'You', ecoPoints: 1250, level: 3, badges: 3, rank: 5, avatar: '' }
-      ],
-      period: 'all_time',
-      updatedAt: new Date()
-    },
-    school: {
-      id: 'school-1',
-      type: 'school',
-      scope: 'school-1',
-      entries: [
-        { userId: '1', userName: 'Green Valley High', ecoPoints: 12500, level: 8, badges: 15, rank: 1, avatar: '' },
-        { userId: '2', userName: 'Eco Academy', ecoPoints: 11200, level: 7, badges: 12, rank: 2, avatar: '' },
-        { userId: '3', userName: 'Nature School', ecoPoints: 9800, level: 6, badges: 10, rank: 3, avatar: '' }
-      ],
-      period: 'all_time',
-      updatedAt: new Date()
-    },
-    global: {
-      id: 'global-1',
-      type: 'global',
-      scope: 'global',
-      entries: [
-        { userId: '1', userName: 'EcoMaster2024', ecoPoints: 25000, level: 10, badges: 25, rank: 1, avatar: '' },
-        { userId: '2', userName: 'GreenWarrior', ecoPoints: 22000, level: 9, badges: 22, rank: 2, avatar: '' },
-        { userId: '3', userName: 'ClimateHero', ecoPoints: 19500, level: 8, badges: 20, rank: 3, avatar: '' }
-      ],
-      period: 'all_time',
-      updatedAt: new Date()
-    }
+  // Get current leaderboard based on filter
+  const currentLeaderboard = leaderboardData[leaderboardFilter] || {
+    id: `${leaderboardFilter}-leaderboard`,
+    type: leaderboardFilter,
+    scope: leaderboardFilter,
+    entries: [],
+    period: 'all_time',
+    updatedAt: new Date().toISOString()
   }
 
+  // Calculate user stats from context and fetched data
   const userStats = {
     totalPoints,
     level,
     badgesEarned: badges.length,
-    rank: 5,
-    weeklyPoints: 150,
-    monthlyPoints: 450
+    rank: leaderboardData[leaderboardFilter]?.entries?.findIndex(entry => entry.userId === user?.id) + 1 || 0,
+    weeklyPoints: pointsHistory?.weekly || 0,
+    monthlyPoints: pointsHistory?.monthly || 0
   }
 
   if (!isSignedIn) {
@@ -151,9 +197,9 @@ export default function GamificationPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Required</h1>
           <p className="text-gray-600 mb-6">Please sign in to access the gamification module.</p>
-          <a href="/sign-in" className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">
+          <Link href="/sign-in" className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">
             Sign In
-          </a>
+          </Link>
         </div>
       </div>
     )
@@ -254,16 +300,27 @@ export default function GamificationPage() {
 
             {/* Badges Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredBadges.map((badge) => (
-                <BadgeCard
-                  key={badge.id}
-                  badge={badge}
-                  isEarned={earnedBadges.includes(badge.id)}
-                  earnedAt={earnedBadges.includes(badge.id) ? new Date() : undefined}
-                  showProgress={!earnedBadges.includes(badge.id)}
-                  progress={Math.min((userStats.totalPoints / badge.pointsRequired) * 100, 100)}
-                />
-              ))}
+              {isLoading.badges ? (
+                <div className="col-span-3 text-center py-12">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600 mb-4"></div>
+                  <p className="text-gray-500">Loading badges...</p>
+                </div>
+              ) : filteredBadges.length > 0 ? (
+                filteredBadges.map((badge) => (
+                  <BadgeCard
+                    key={badge.id}
+                    badge={badge}
+                    isEarned={badges.includes(badge.id)}
+                    earnedAt={badge.earnedAt}
+                    showProgress={!badges.includes(badge.id)}
+                    progress={Math.min((userStats.totalPoints / badge.pointsRequired) * 100, 100)}
+                  />
+                ))
+              ) : (
+                <div className="col-span-3 text-center py-12">
+                  <p className="text-gray-500">No badges found for this category.</p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -296,11 +353,22 @@ export default function GamificationPage() {
 
             {/* Leaderboard */}
             <div className="max-w-4xl mx-auto">
-              <Leaderboard
-                leaderboard={leaderboards[leaderboardFilter]}
-                currentUserId="5"
-                onUserClick={(userId) => console.log('User clicked:', userId)}
-              />
+              {isLoading.leaderboard ? (
+                <div className="text-center py-12">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600 mb-4"></div>
+                  <p className="text-gray-500">Loading leaderboard...</p>
+                </div>
+              ) : leaderboardData[leaderboardFilter]?.entries?.length > 0 ? (
+                <Leaderboard
+                  leaderboard={leaderboardData[leaderboardFilter]}
+                  currentUserId={user?.id || ''}
+                  onUserClick={(userId) => console.log('User clicked:', userId)}
+                />
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">No leaderboard data available.</p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -348,29 +416,62 @@ export default function GamificationPage() {
             {/* Recent Points Activity */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                    <span className="text-gray-700">Completed "Climate Change Basics" lesson</span>
-                  </div>
-                  <span className="text-sm font-medium text-green-600">+50 points</span>
+              {isLoading.points ? (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600 mb-4"></div>
+                  <p className="text-gray-500">Loading activity...</p>
                 </div>
-                <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                    <span className="text-gray-700">Earned "Eco Warrior" badge</span>
-                  </div>
-                  <span className="text-sm font-medium text-blue-600">+25 points</span>
+              ) : (
+                <div className="space-y-4">
+                  {Object.entries(pointsHistory).length > 0 ? (
+                    Object.entries(pointsHistory)
+                      .filter(([key]) => key !== 'weekly' && key !== 'monthly')
+                      .map(([activityType, points], index) => {
+                        // Determine color based on activity type
+                        let color = 'green';
+                        let label = 'Activity';
+                        
+                        if (activityType === 'lesson') {
+                          color = 'green';
+                          label = 'Completed lessons';
+                        } else if (activityType === 'badge') {
+                          color = 'blue';
+                          label = 'Earned badges';
+                        } else if (activityType === 'task') {
+                          color = 'purple';
+                          label = 'Completed tasks';
+                        } else if (activityType === 'quiz') {
+                          color = 'orange';
+                          label = 'Completed quizzes';
+                        }
+                        
+                        return (
+                          <div key={index} className={`flex items-center justify-between p-3 rounded-lg bg-${color}-50`}>
+                            <div className="flex items-center">
+                              <div className={`w-10 h-10 rounded-full bg-${color}-100 flex items-center justify-center mr-3`}>
+                                <span className={`text-${color}-600`}>
+                                  {activityType === 'lesson' ? '📚' : 
+                                   activityType === 'badge' ? '🏆' : 
+                                   activityType === 'task' ? '✅' : 
+                                   activityType === 'quiz' ? '❓' : '🌟'}
+                                </span>
+                              </div>
+                              <div>
+                                <div className="font-medium">{label}</div>
+                                <div className="text-sm text-gray-500">Total points earned</div>
+                              </div>
+                            </div>
+                            <div className={`text-lg font-bold text-${color}-600`}>+{points}</div>
+                          </div>
+                        );
+                      })
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">No activity recorded yet.</p>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full mr-3"></div>
-                    <span className="text-gray-700">Submitted "Plant a Tree" task</span>
-                  </div>
-                  <span className="text-sm font-medium text-purple-600">+100 points</span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         )}

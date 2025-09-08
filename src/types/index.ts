@@ -11,8 +11,8 @@ export interface User {
   ecoPoints: number
   level: number
   badges: Badge[]
-  createdAt: Date
-  updatedAt: Date
+  createdAt: string
+  updatedAt: string
 }
 
 export interface School {
@@ -24,7 +24,7 @@ export interface School {
   country: string
   teachers: User[]
   students: User[]
-  createdAt: Date
+  createdAt: string
 }
 
 export interface NGO {
@@ -34,7 +34,7 @@ export interface NGO {
   website?: string
   contactEmail: string
   members: User[]
-  createdAt: Date
+  createdAt: string
 }
 
 export interface Badge {
@@ -45,6 +45,7 @@ export interface Badge {
   pointsRequired: number
   category: 'eco_action' | 'knowledge' | 'leadership' | 'community'
   rarity: 'common' | 'rare' | 'epic' | 'legendary'
+  earnedAt?: string
 }
 
 export interface Lesson {
@@ -59,8 +60,8 @@ export interface Lesson {
   ecoPoints: number
   prerequisites: string[]
   tags: string[]
-  createdAt: Date
-  updatedAt: Date
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Quiz {
@@ -71,7 +72,7 @@ export interface Quiz {
   timeLimit: number // in minutes
   passingScore: number // percentage
   ecoPoints: number
-  createdAt: Date
+  createdAt: string
 }
 
 export interface QuizQuestion {
@@ -90,13 +91,13 @@ export interface Task {
   description: string
   instructions: string
   ecoPoints: number
-  deadline: Date
+  deadline: string
   proofType: 'photo' | 'video' | 'document'
   assignedBy: string // teacher/ngo id
   assignedTo: string[] // student ids
   submissions: TaskSubmission[]
   status: 'active' | 'completed' | 'expired'
-  createdAt: Date
+  createdAt: string
 }
 
 export interface TaskSubmission {
@@ -107,8 +108,8 @@ export interface TaskSubmission {
   description: string
   status: 'pending' | 'approved' | 'rejected'
   feedback?: string
-  submittedAt: Date
-  reviewedAt?: Date
+  submittedAt: string
+  reviewedAt?: string
 }
 
 export interface Leaderboard {
@@ -117,7 +118,7 @@ export interface Leaderboard {
   scope: string // class id, school id, or 'global'
   entries: LeaderboardEntry[]
   period: 'daily' | 'weekly' | 'monthly' | 'all_time'
-  updatedAt: Date
+  updatedAt: string
 }
 
 export interface LeaderboardEntry {
@@ -136,7 +137,7 @@ export interface Certificate {
   type: 'completion' | 'achievement' | 'participation'
   title: string
   description: string
-  issuedAt: Date
-  validUntil?: Date
+  issuedAt: string
+  validUntil?: string
   certificateUrl: string
 }
