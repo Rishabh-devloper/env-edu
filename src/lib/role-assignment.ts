@@ -7,35 +7,44 @@ import { UserRole } from '@/types'
  */
 export async function assignUserRole(userId: string, role: UserRole): Promise<boolean> {
   try {
-    console.log('Attempting to assign role:', role, 'to user:', userId)
-    
-    // Check if Clerk is properly configured
     if (!process.env.CLERK_SECRET_KEY) {
-      console.error('CLERK_SECRET_KEY is not configured!')
+      console.error('Clerk secret key not configured')
       return false
     }
 
-    console.log('Clerk secret key found, updating metadata...')
-    
-    const result = await clerkClient.users.updateUserMetadata(userId, {
-      publicMetadata: {
-        role: role
-      }
+    if (!userId || typeof userId !== 'string') {
+      console.error('Invalid userId provided')
+      return false
+    }
+
+    if (!isValidRole(role)) {
+      console.error(`Invalid role: ${role}`)
+      return false
+    }
+
+    // First, verify the user exists
+    const user = await clerkClient.users.getUser(userId)
+    if (!user) {
+      console.error(`User not found: ${userId}`)
+      return false
+    }
+
+    // Update user metadata with role
+    await clerkClient.users.updateUser(userId, {
+      privateMetadata: { 
+        ...user.privateMetadata,
+        role,
+        roleUpdatedAt: new Date().toISOString()
+      },
     })
-    
-    console.log('Role assignment successful:', result.id)
+
+    console.log(`Successfully assigned role '${role}' to user ${userId}`)
     return true
   } catch (error) {
-    console.error('Error assigning role:', error)
-    
-    // Check if it's a Clerk client issue
+    console.error('Error assigning user role:', error)
     if (error instanceof Error) {
       console.error('Error details:', error.message)
-      if (error.message.includes('Unauthorized')) {
-        console.error('Clerk authentication failed - check your CLERK_SECRET_KEY')
-      }
     }
-    
     return false
   }
 }
@@ -43,20 +52,30 @@ export async function assignUserRole(userId: string, role: UserRole): Promise<bo
 /**
  * Get user role from Clerk
  */
-export async function getUserRole(userId: string): Promise<UserRole | null> {
+/**
+ * Get the role of a user
+ */
+export const getUserRole = async (userId: string): Promise<UserRole> => {
   try {
     if (!process.env.CLERK_SECRET_KEY) {
-      console.warn('Clerk secret key not configured. Returning default role.')
-      return 'student'
+      console.error('CLERK_SECRET_KEY is not defined');
+      return 'student';
     }
 
-    const user = await clerkClient.users.getUser(userId)
-    return (user.publicMetadata?.role as UserRole) || 'student'
+    const user = await clerkClient.users.getUser(userId);
+    const role = user.privateMetadata.role as UserRole;
+    
+    // If role is not set, return default role
+    if (!role || !isValidRole(role)) {
+      return 'student';
+    }
+    
+    return role;
   } catch (error) {
-    console.error('Error getting user role:', error)
-    return 'student'
+    console.error('Error getting user role:', error);
+    return 'student';
   }
-}
+};
 
 /**
  * Batch assign roles to multiple users
@@ -92,7 +111,7 @@ export async function getAllUsersWithRoles(limit: number = 50, offset: number = 
       email: user.emailAddresses[0]?.emailAddress || '',
       firstName: user.firstName || '',
       lastName: user.lastName || '',
-      role: (user.publicMetadata?.role as UserRole) || 'student',
+      role: (user.privateMetadata?.role as UserRole) || 'student',
       createdAt: user.createdAt,
       lastActiveAt: user.lastActiveAt
     }))

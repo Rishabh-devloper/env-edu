@@ -91,7 +91,7 @@ export default clerkMiddleware(async (auth, request) => {
   }
   
   // Get user role from session claims
-  const userRole = (sessionClaims?.metadata as any)?.role as UserRole || 'student'
+  const userRole = sessionClaims?.privateMetadata?.role as UserRole || 'student'
   
   // Handle root dashboard redirect based on role
   if (pathname === '/dashboard' || pathname === '/') {

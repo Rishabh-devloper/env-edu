@@ -1,77 +1,80 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { getQuizzes, seedQuizzes } from '@/db/actions/quizzes'
+import { db } from '@/lib/db'
+
+interface QuizData {
+  id: string
+  title: string
+  description: string
+  category: string
+  difficulty: 'easy' | 'medium' | 'hard'
+  questionsCount: number
+  estimatedTime: number
+  isCompleted: boolean
+  bestScore?: number
+  lastAttempt?: string
+}
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const lessonId = searchParams.get('lessonId')
-    
-    let quizzes = await getQuizzes(lessonId || undefined)
-    
-    // If no quizzes found, seed the database
-    if (quizzes.length === 0) {
-      const seedResult = await seedQuizzes()
-      if (seedResult.success) {
-        quizzes = await getQuizzes(lessonId || undefined)
-      }
-    }
-    
-    return NextResponse.json({
-      success: true,
-      data: quizzes
-    })
-  } catch (error) {
-    console.error('Error fetching quizzes:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch quizzes' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
     const { userId } = await auth()
-    if (!userId) {
+    const { searchParams } = new URL(request.url)
+    const queryUserId = searchParams.get('userId') || userId
+
+    if (!queryUserId) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
+        { error: 'Unauthorized' }, 
         { status: 401 }
       )
     }
 
-    const body = await request.json()
-    const { quizId, answers, score, timeSpent } = body
+    // Get all quizzes with user completion status
+    const result = await db.query(`
+      SELECT 
+        q.id,
+        q.title,
+        q.description,
+        q.category,
+        q.difficulty,
+        q.questions_count,
+        q.estimated_time_minutes as estimated_time,
+        CASE WHEN qr.id IS NOT NULL THEN true ELSE false END as is_completed,
+        qr.score as best_score,
+        qr.completed_at as last_attempt
+      FROM quizzes q
+      LEFT JOIN (
+        SELECT DISTINCT ON (qr1.quiz_id) 
+          qr1.id, qr1.quiz_id, qr1.score, qr1.completed_at
+        FROM quiz_results qr1
+        WHERE qr1.user_id = $1
+        ORDER BY qr1.quiz_id, qr1.score DESC, qr1.completed_at DESC
+      ) qr ON q.id = qr.quiz_id
+      WHERE q.is_active = true
+      ORDER BY q.created_at ASC
+    `, [queryUserId])
 
-    if (!quizId || !answers || score === undefined || !timeSpent) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
-        { status: 400 }
-      )
-    }
+    const quizzes: QuizData[] = result.rows.map(row => ({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      category: row.category,
+      difficulty: row.difficulty as 'easy' | 'medium' | 'hard',
+      questionsCount: parseInt(row.questions_count),
+      estimatedTime: parseInt(row.estimated_time),
+      isCompleted: row.is_completed,
+      bestScore: row.best_score ? parseInt(row.best_score) : undefined,
+      lastAttempt: row.last_attempt
+    }))
 
-    const { createQuizAttempt } = await import('@/db/actions/quizzes')
-    const result = await createQuizAttempt(userId, quizId, answers, score, timeSpent)
+    return NextResponse.json(quizzes)
 
-    if (result.success) {
-      return NextResponse.json({
-        success: true,
-        data: {
-          attemptId: result.attemptId,
-          passed: result.passed,
-          pointsEarned: result.pointsEarned
-        }
-      })
-    } else {
-      return NextResponse.json(
-        { success: false, error: result.error },
-        { status: 500 }
-      )
-    }
   } catch (error) {
-    console.error('Error submitting quiz attempt:', error)
+    console.error('Error in /api/quizzes:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to submit quiz attempt' },
+      { 
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      }, 
       { status: 500 }
     )
   }

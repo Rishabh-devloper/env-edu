@@ -79,7 +79,7 @@ export default function Leaderboard({ leaderboard, currentUserId, onUserClick }:
               {getScopeText(leaderboard.type, leaderboard.scope)} Leaderboard
             </h3>
             <p className="text-sm text-gray-600">
-              {getPeriodText(leaderboard.period)} • Updated {leaderboard.updatedAt.toLocaleDateString()}
+              {getPeriodText(leaderboard.period)} • Updated {new Date(leaderboard.updatedAt).toLocaleDateString()}
             </p>
           </div>
           <div className="flex items-center text-gray-500 text-sm">
@@ -141,7 +141,7 @@ export default function Leaderboard({ leaderboard, currentUserId, onUserClick }:
                 {/* Points */}
                 <div className="text-right">
                   <p className="text-lg font-bold text-green-600">
-                    {entry.ecoPoints.toLocaleString()}
+                    {(entry.ecoPoints || 0).toLocaleString()}
                   </p>
                   <p className="text-sm text-gray-500">eco points</p>
                 </div>
@@ -153,14 +153,14 @@ export default function Leaderboard({ leaderboard, currentUserId, onUserClick }:
                   <div className="flex justify-between text-xs text-gray-500 mb-1">
                     <span>vs #1</span>
                     <span>
-                      {Math.round(((entry.ecoPoints / leaderboard.entries[0].ecoPoints) * 100))}%
+                      {Math.round((((entry.ecoPoints || 0) / (leaderboard.entries[0].ecoPoints || 1)) * 100))}%
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-1">
                     <div 
                       className="bg-green-500 h-1 rounded-full transition-all duration-300"
                       style={{ 
-                        width: `${(entry.ecoPoints / leaderboard.entries[0].ecoPoints) * 100}%` 
+                        width: `${((entry.ecoPoints || 0) / (leaderboard.entries[0].ecoPoints || 1)) * 100}%` 
                       }}
                     ></div>
                   </div>
@@ -178,7 +178,7 @@ export default function Leaderboard({ leaderboard, currentUserId, onUserClick }:
             <TrendingUp className="w-4 h-4 mr-1" />
             <span>Rankings update every hour</span>
           </div>
-          <span>Last updated: {leaderboard.updatedAt.toLocaleTimeString()}</span>
+          <span>Last updated: {new Date(leaderboard.updatedAt).toLocaleTimeString()}</span>
         </div>
       </div>
     </div>

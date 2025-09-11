@@ -1,23 +1,20 @@
 import { useUser } from '@clerk/nextjs'
 import { UserRole } from '@/types'
 
-export const useUserRole = () => {
-  const { user } = useUser()
-  
-  if (!user) {
-    return { role: null, isAuthenticated: false }
-  }
-
-  const role = user.publicMetadata?.role as UserRole || 'student'
+/**
+ * Hook to get the current user's role
+ */
+export function useUserRole() {
+  const { user } = useUser();
+  const role = user?.privateMetadata?.role as UserRole || 'student';
   
   return {
     role,
-    isAuthenticated: true,
     isStudent: role === 'student',
     isTeacher: role === 'teacher',
     isNGO: role === 'ngo',
-    isAdmin: role === 'admin'
-  }
+    isAdmin: role === 'admin',
+  };
 }
 
 export const hasPermission = (userRole: UserRole, requiredRole: UserRole | UserRole[]) => {
@@ -36,16 +33,6 @@ export const hasPermission = (userRole: UserRole, requiredRole: UserRole | UserR
 }
 
 export const getRoleBasedRedirect = (role: UserRole) => {
-  switch (role) {
-    case 'student':
-      return '/student/dashboard'
-    case 'teacher':
-      return '/teacher/dashboard'
-    case 'ngo':
-      return '/ngo/dashboard'
-    case 'admin':
-      return '/admin/dashboard'
-    default:
-      return '/dashboard'
-  }
+  // Always redirect to main landing page to show role-specific content
+  return '/'
 }

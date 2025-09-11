@@ -19,7 +19,7 @@ export async function authenticateAPI(): Promise<AuthenticatedUser | null> {
       return null
     }
 
-    const role = (sessionClaims?.metadata as any)?.role as UserRole || 'student'
+    const role = (sessionClaims?.privateMetadata as any)?.role as UserRole || 'student'
     const email = sessionClaims?.email as string
 
     return {

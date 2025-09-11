@@ -15,11 +15,12 @@ export default function Dashboard() {
     if (isLoaded) {
       if (!isAuthenticated) {
         router.push('/sign-in')
-      } else if (role) {
-        router.push(getRoleBasedRedirect(role))
+      } else {
+        // Redirect authenticated users to main landing page where they'll see role-specific content
+        router.push('/')
       }
     }
-  }, [isLoaded, isAuthenticated, role, router])
+  }, [isLoaded, isAuthenticated, router])
 
   if (!isLoaded) {
     return <LoadingSpinner />

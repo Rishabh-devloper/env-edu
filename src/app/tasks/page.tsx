@@ -3,8 +3,9 @@
 import React, { useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { useUserRole } from '@/lib/auth'
-import { useTasks, useUserProgress, Task } from '@/hooks/useUserData'
-import { 
+import { useEnhancedTasks } from '@/hooks/useEnhancedData'
+import { Task } from '@/types'
+import {
   Target, 
   Camera, 
   Upload, 
@@ -26,22 +27,45 @@ import Link from 'next/link'
 export default function TasksPage() {
   const { user } = useUser()
   const { role, isStudent } = useUserRole()
-  const { tasks, loading, submitTask } = useTasks()
-  const { progress } = useUserProgress()
+  const { 
+    tasks,
+    userSubmissions,
+    loading,
+    error,
+    submitTask,
+    refreshData
+  } = useEnhancedTasks({
+    enablePolling: true,
+    pollingInterval: 60000 // Poll every minute for task updates
+  })
+  
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [submissionModal, setSubmissionModal] = useState<{isOpen: boolean, task: Task | null}>({isOpen: false, task: null})
-  const [submissionData, setSubmissionData] = useState<{images: File[], text: string}>({images: [], text: ''})
+  const [submissionData, setSubmissionData] = useState<{images: File[], text: string, description: string}>({images: [], text: '', description: ''})
   const [submitting, setSubmitting] = useState(false)
 
+  // Enhanced task status calculation
+  const getTaskStatus = (task: Task) => {
+    const submission = userSubmissions.find(sub => sub.taskId === task.id)
+    if (!submission) return 'available'
+    
+    switch (submission.status) {
+      case 'pending': return 'under-review'
+      case 'approved': return 'completed'
+      case 'rejected': return 'available' // Can resubmit
+      default: return 'available'
+    }
+  }
+  
   const filteredTasks = tasks.filter(task => {
     const matchesCategory = selectedCategory === 'all' || task.category === selectedCategory
     const matchesDifficulty = selectedDifficulty === 'all' || task.difficulty === selectedDifficulty
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          task.description.toLowerCase().includes(searchTerm.toLowerCase())
     return matchesCategory && matchesDifficulty && matchesSearch
-  })
+  }).map(task => ({ ...task, status: getTaskStatus(task) }))
 
   const getStatusColor = (status: Task['status']) => {
     switch (status) {
@@ -79,11 +103,23 @@ export default function TasksPage() {
     
     setSubmitting(true)
     try {
-      const result = await submitTask(submissionModal.task.id, submissionData)
+      // Convert File objects to base64 or URLs for submission
+      const photoUrls = submissionData.images.map(file => URL.createObjectURL(file))
+      
+      const result = await submitTask({
+        taskId: submissionModal.task.id,
+        description: submissionData.description || submissionData.text,
+        photos: photoUrls,
+        location: null // Could be enhanced to get user's location
+      })
+      
       if (result.success) {
         setSubmissionModal({isOpen: false, task: null})
-        setSubmissionData({images: [], text: ''})
+        setSubmissionData({images: [], text: '', description: ''})
+        // Refresh data to show updated task status
+        refreshData()
         // Show success message
+        console.log('Task submitted successfully!')
       } else {
         // Show error message
         console.error('Failed to submit task:', result.error)
@@ -106,6 +142,24 @@ export default function TasksPage() {
     )
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Tasks</h2>
+          <p className="text-gray-600 mb-6">Unable to load your environmental tasks: {error.message}</p>
+          <button 
+            onClick={refreshData}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       {/* Header */}
@@ -121,18 +175,28 @@ export default function TasksPage() {
                 Complete environmental challenges and make a real impact in your community
               </p>
             </div>
-            {progress && (
-              <div className="hidden md:flex items-center space-x-6">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{progress.completedTasks.length}</div>
-                  <div className="text-sm text-gray-600">Completed</div>
+            <div className="hidden md:flex items-center space-x-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {userSubmissions.filter(sub => sub.status === 'approved').length}
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{progress.totalPoints}</div>
-                  <div className="text-sm text-gray-600">Points Earned</div>
-                </div>
+                <div className="text-sm text-gray-600">Completed</div>
               </div>
-            )}
+              <div className="text-center">
+                <div className="text-2xl font-bold text-yellow-600">
+                  {userSubmissions.filter(sub => sub.status === 'pending').length}
+                </div>
+                <div className="text-sm text-gray-600">Under Review</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">
+                  {userSubmissions.reduce((total, sub) => 
+                    sub.status === 'approved' ? total + (sub.pointsEarned || 0) : total, 0
+                  )}
+                </div>
+                <div className="text-sm text-gray-600">Points Earned</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -336,8 +400,8 @@ export default function TasksPage() {
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Description:</h3>
                   <textarea
-                    value={submissionData.text}
-                    onChange={(e) => setSubmissionData(prev => ({...prev, text: e.target.value}))}
+                    value={submissionData.description}
+                    onChange={(e) => setSubmissionData(prev => ({...prev, description: e.target.value}))}
                     className="w-full h-32 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="Describe your task completion, findings, or observations..."
                   />
@@ -355,7 +419,7 @@ export default function TasksPage() {
                 </button>
                 <button
                   onClick={handleSubmitTask}
-                  disabled={submitting || (submissionData.images.length === 0 && submissionData.text.trim() === '')}
+                  disabled={submitting || (submissionData.images.length === 0 && submissionData.description.trim() === '')}
                   className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-4 rounded-lg font-medium hover:from-green-700 hover:to-emerald-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   {submitting ? (

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserStats as getUserStatsAnalytics } from '@/db/actions/analytics'
-import { getProgress as getProgressState, addPoints as addPointsState, completeLesson as completeLessonState, getCompletedLessons, ensureUserRecord } from '@/db/actions/progress'
+import { getUserStats as getUserStatsAnalytics } from '../../../db/actions/analytics'
+import { getProgress as getProgressState, addPoints as addPointsState, completeLesson as completeLessonState, getCompletedLessons, ensureUserRecord } from '../../../db/actions/progress'
 
 export async function GET(request: NextRequest) {
   try {

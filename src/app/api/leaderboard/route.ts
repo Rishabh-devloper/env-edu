@@ -184,9 +184,28 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Transform to expected structure
+    const transformedLeaderboard = {
+      id: `${type}-leaderboard`,
+      type: type,
+      scope: type,
+      entries: leaderboardData.map(user => ({
+        userId: user.id,
+        userName: user.name,
+        ecoPoints: user.points,
+        level: user.level,
+        rank: user.rank,
+        avatar: user.avatar,
+        school: user.school,
+        badges: 1 // Mock badge count
+      })),
+      period: 'all_time',
+      updatedAt: new Date().toISOString()
+    }
+
     return NextResponse.json({
       success: true,
-      leaderboard: leaderboardData,
+      data: transformedLeaderboard.entries,
       userRank: userRank,
       totalUsers: type === 'global' ? 1500 : type === 'school' ? 120 : 25,
       leaderboardType: type

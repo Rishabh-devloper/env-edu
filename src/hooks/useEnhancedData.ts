@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useUser } from '@clerk/nextjs'
 
 // Enhanced Type Definitions
@@ -30,7 +30,9 @@ interface UserProgress {
     earnedAt: string
     progress: number
   }>
-  pointsByActivity: {
+  currentStreak?: number
+  streakMultiplier?: number
+  pointsHistory?: {
     lessons: number
     tasks: number
     quizzes: number
@@ -109,17 +111,19 @@ interface LeaderboardEntry {
 
 interface Notification {
   id: string
-  type: 'achievement' | 'level_up' | 'task_approved' | 'streak' | 'reminder'
+  userId: string
+  type: 'achievement' | 'level_up' | 'task_approved' | 'task_rejected' | 'streak' | 'reminder' | 'badge_earned' | 'leaderboard_update' | 'new_task' | 'streak_milestone' | 'community'
   title: string
   message: string
   isRead: boolean
   createdAt: string
-  data?: {
+  metadata?: {
     actionUrl?: string
     badgeId?: string
     taskId?: string
     points?: number
     level?: number
+    streak?: number
   }
 }
 
@@ -139,35 +143,94 @@ export function useEnhancedUserProgress() {
 
     try {
       setError(null)
-      const response = await fetch('/api/progress', {
-        cache: 'no-store' // Always get fresh data
-      })
+      // Add a try-catch block specifically for the fetch operation
+      let response;
+      try {
+        response = await fetch('/api/progress', {
+          cache: 'no-store' // Always get fresh data
+        })
+      } catch (fetchErr) {
+        console.error('Network error during fetch:', fetchErr)
+        throw new Error('Network error: Unable to connect to the server')
+      }
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: Failed to fetch progress`)
       }
       
-      const data = await response.json()
-      if (data.success) {
-        setProgress(data.data)
+      let data;
+      try {
+        data = await response.json()
+      } catch (jsonErr) {
+        console.error('Error parsing JSON response:', jsonErr)
+        throw new Error('Invalid response format from server')
+      }
+      
+      if (data && data.success) {
+        setProgress(data.data || null)
         setLastUpdated(new Date())
       } else {
-        throw new Error(data.error || 'Unknown error occurred')
+        throw new Error((data && data.error) || 'Unknown error occurred')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch progress')
       console.error('Progress fetch error:', err)
+      // Provide a fallback empty progress object to prevent null reference errors
+      setProgress({
+        totalPoints: 0,
+        level: 1,
+        completedLessonsCount: 0,
+        badges: [],
+        streak: { current: 0, longest: 0, multiplier: 1 },
+        tasks: { completed: 0, pending: 0, pointsByCategory: {} },
+        completionRate: 0,
+        nextLevelPoints: 100
+      })
     } finally {
       setLoading(false)
     }
   }, [user])
 
   useEffect(() => {
-    fetchProgress()
+    let isMounted = true;
+    let pollingInterval: NodeJS.Timeout | null = null;
     
-    // Set up polling for real-time updates every 30 seconds
-    const interval = setInterval(fetchProgress, 30000)
-    return () => clearInterval(interval)
+    const fetchInitialData = async () => {
+      try {
+        if (isMounted) {
+          await fetchProgress();
+        }
+      } catch (error) {
+        console.error('Error fetching initial progress data:', error);
+      }
+    };
+    
+    fetchInitialData();
+    
+    // Set up polling for real-time updates every 30 seconds with error handling
+    try {
+      pollingInterval = setInterval(() => {
+        if (isMounted) {
+          fetchProgress().catch(err => {
+            console.error('Interval progress fetch failed:', err)
+          })
+        }
+      }, 30000)
+    } catch (err) {
+      console.error('Failed to set up polling interval:', err)
+    }
+    
+    // Clean up function with error handling
+    return () => {
+      isMounted = false;
+      if (pollingInterval) {
+        try {
+          clearInterval(pollingInterval)
+        } catch (err) {
+          console.error('Failed to clear interval:', err)
+        }
+      }
+    }
   }, [fetchProgress])
 
   const addPoints = async (points: number, reason?: string, activityType?: string) => {
@@ -228,6 +291,21 @@ export function useEnhancedUserProgress() {
     }
   }
 
+  // Enhanced refresh method with error handling and loading state management
+  const refresh = async () => {
+    try {
+      setLoading(true)
+      await fetchProgress()
+      return true
+    } catch (err) {
+      console.error('Manual refresh failed:', err)
+      setError(err instanceof Error ? err.message : 'Failed to refresh progress')
+      return false
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return { 
     progress, 
     loading, 
@@ -235,125 +313,10 @@ export function useEnhancedUserProgress() {
     lastUpdated,
     addPoints, 
     completeLesson,
-    refresh: fetchProgress
+    refresh
   }
 }
 
-// Enhanced Tasks Hook with Submission Management
-export function useEnhancedTasks(category?: string, difficulty?: string) {
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [submissions, setSubmissions] = useState<TaskSubmission[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchTasks = useCallback(async () => {
-    try {
-      setError(null)
-      const params = new URLSearchParams()
-      if (category) params.append('category', category)
-      if (difficulty) params.append('difficulty', difficulty)
-      
-      const [tasksRes, submissionsRes] = await Promise.all([
-        fetch(`/api/tasks?${params}`),
-        fetch('/api/tasks/submissions')
-      ])
-      
-      if (tasksRes.ok) {
-        const tasksData = await tasksRes.json()
-        if (tasksData.success) {
-          setTasks(tasksData.tasks || [])
-        }
-      }
-      
-      if (submissionsRes.ok) {
-        const submissionsData = await submissionsRes.json()
-        if (submissionsData.success) {
-          setSubmissions(submissionsData.submissions || [])
-        }
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch tasks')
-    } finally {
-      setLoading(false)
-    }
-  }, [category, difficulty])
-
-  useEffect(() => {
-    fetchTasks()
-  }, [fetchTasks])
-
-  const submitTask = async (taskId: string, submissionData: {
-    description: string
-    photos?: File[]
-    location?: { lat: number; lng: number; address: string }
-  }) => {
-    try {
-      // Handle file uploads if photos are provided
-      let photoUrls: string[] = []
-      if (submissionData.photos && submissionData.photos.length > 0) {
-        // This would typically upload to a cloud service
-        // For now, we'll simulate with base64 or placeholder URLs
-        photoUrls = submissionData.photos.map((file, index) => 
-          `placeholder-photo-${taskId}-${index}.jpg`
-        )
-      }
-      
-      const response = await fetch('/api/tasks/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          taskId,
-          submission: {
-            description: submissionData.description,
-            photos: photoUrls,
-            location: submissionData.location
-          }
-        })
-      })
-      
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to submit task')
-      }
-      
-      const result = await response.json()
-      if (result.success) {
-        // Refresh submissions to show the new one
-        await fetchTasks()
-        return result.data
-      } else {
-        throw new Error(result.error || 'Failed to submit task')
-      }
-    } catch (err) {
-      throw new Error(err instanceof Error ? err.message : 'Failed to submit task')
-    }
-  }
-
-  const getTaskStats = () => {
-    const completed = submissions.filter(s => s.status === 'approved').length
-    const pending = submissions.filter(s => s.status === 'pending').length
-    const rejected = submissions.filter(s => s.status === 'rejected').length
-    
-    return {
-      total: tasks.length,
-      submitted: submissions.length,
-      completed,
-      pending,
-      rejected,
-      completionRate: tasks.length > 0 ? Math.round((completed / tasks.length) * 100) : 0
-    }
-  }
-
-  return { 
-    tasks, 
-    submissions, 
-    loading, 
-    error, 
-    submitTask, 
-    getTaskStats,
-    refresh: fetchTasks
-  }
-}
 
 // Enhanced Badges Hook with Progress Tracking
 export function useEnhancedBadges() {
@@ -510,13 +473,22 @@ export function useEnhancedLeaderboard(
   }
 }
 
-// Notifications Hook
-export function useNotifications() {
+// Enhanced Notifications Hook
+export function useEnhancedNotifications(options?: {
+  enablePolling?: boolean
+  pollingInterval?: number
+}) {
   const { user } = useUser()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Memoize options to prevent infinite loops
+  const memoizedOptions = useMemo(() => ({
+    enablePolling: options?.enablePolling !== false,
+    pollingInterval: options?.pollingInterval || 30000
+  }), [options?.enablePolling, options?.pollingInterval])
 
   const fetchNotifications = useCallback(async () => {
     if (!user) {
@@ -554,10 +526,15 @@ export function useNotifications() {
   useEffect(() => {
     fetchNotifications()
     
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000)
-    return () => clearInterval(interval)
-  }, [fetchNotifications])
+    // Poll for new notifications based on options
+    if (memoizedOptions.enablePolling) {
+      const interval = setInterval(
+        fetchNotifications, 
+        memoizedOptions.pollingInterval
+      )
+      return () => clearInterval(interval)
+    }
+  }, [fetchNotifications, memoizedOptions.enablePolling, memoizedOptions.pollingInterval])
 
   const markAsRead = async (notificationId: string) => {
     try {
@@ -592,6 +569,24 @@ export function useNotifications() {
     }
   }
 
+  const deleteNotification = async (notificationId: string) => {
+    try {
+      const response = await fetch(`/api/notifications/${notificationId}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        const wasUnread = notifications.find(n => n.id === notificationId && !n.isRead)
+        setNotifications(prev => prev.filter(n => n.id !== notificationId))
+        if (wasUnread) {
+          setUnreadCount(prev => Math.max(0, prev - 1))
+        }
+      }
+    } catch (err) {
+      console.error('Error deleting notification:', err)
+    }
+  }
+
   return {
     notifications,
     unreadCount,
@@ -599,7 +594,238 @@ export function useNotifications() {
     error,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
     refresh: fetchNotifications
+  }
+}
+
+// Enhanced Leaderboards Hook with Multiple Scopes
+export function useEnhancedLeaderboards(options: {
+  scope?: 'global' | 'school' | 'class'
+  period?: 'daily' | 'weekly' | 'monthly' | 'all_time'
+  enablePolling?: boolean
+  pollingInterval?: number
+}) {
+  const { user } = useUser()
+  const [leaderboards, setLeaderboards] = useState<{
+    global?: { entries: LeaderboardEntry[] }
+    school?: { entries: LeaderboardEntry[] }
+    class?: { entries: LeaderboardEntry[] }
+  }>({})
+  const [userRank, setUserRank] = useState<number>(0)
+  const [nearbyUsers, setNearbyUsers] = useState<LeaderboardEntry[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  // Memoize options to prevent infinite loops
+  const memoizedOptions = useMemo(() => ({
+    scope: options?.scope || 'global',
+    period: options?.period || 'weekly',
+    enablePolling: options?.enablePolling !== false,
+    pollingInterval: options?.pollingInterval || 30000
+  }), [options?.scope, options?.period, options?.enablePolling, options?.pollingInterval])
+
+  const refreshData = useCallback(async () => {
+    if (!user) return
+
+    try {
+      setError(null)
+      const { scope, period } = memoizedOptions
+      
+      const [leaderboardRes, rankRes] = await Promise.all([
+        fetch(`/api/leaderboard?scope=${scope}&period=${period}`),
+        fetch(`/api/leaderboard/rank?scope=${scope}&period=${period}`)
+      ])
+
+      if (leaderboardRes.ok) {
+        const leaderboardData = await leaderboardRes.json()
+        if (leaderboardData.success) {
+          setLeaderboards({
+            [scope]: { entries: leaderboardData.data || [] }
+          })
+        }
+      }
+
+      if (rankRes.ok) {
+        const rankData = await rankRes.json()
+        if (rankData.success) {
+          setUserRank(rankData.rank || 0)
+          setNearbyUsers(rankData.nearby || [])
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch leaderboards'))
+    } finally {
+      setLoading(false)
+    }
+  }, [user, memoizedOptions])
+
+  useEffect(() => {
+    refreshData()
+
+    if (memoizedOptions.enablePolling) {
+      const interval = setInterval(
+        refreshData,
+        memoizedOptions.pollingInterval
+      )
+      return () => clearInterval(interval)
+    }
+  }, [refreshData, memoizedOptions.enablePolling, memoizedOptions.pollingInterval])
+
+  return {
+    leaderboards,
+    userRank,
+    nearbyUsers,
+    loading,
+    error,
+    refreshData
+  }
+}
+
+// Enhanced Tasks Hook with Submissions
+export function useEnhancedTasks(options?: {
+  enablePolling?: boolean
+  pollingInterval?: number
+}) {
+  const { user } = useUser()
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [userSubmissions, setUserSubmissions] = useState<TaskSubmission[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  // Memoize options to prevent infinite loops
+  const memoizedOptions = useMemo(() => ({
+    enablePolling: options?.enablePolling !== false,
+    pollingInterval: options?.pollingInterval || 60000
+  }), [options?.enablePolling, options?.pollingInterval])
+
+  const refreshData = useCallback(async () => {
+    if (!user) return
+
+    try {
+      setError(null)
+      const [tasksRes, submissionsRes] = await Promise.all([
+        fetch('/api/tasks'),
+        fetch('/api/tasks/submissions')
+      ])
+
+      if (tasksRes.ok) {
+        const tasksData = await tasksRes.json()
+        if (tasksData.success) {
+          setTasks(tasksData.tasks || [])
+        }
+      }
+
+      if (submissionsRes.ok) {
+        const submissionsData = await submissionsRes.json()
+        if (submissionsData.success) {
+          setUserSubmissions(submissionsData.submissions || [])
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch tasks'))
+    } finally {
+      setLoading(false)
+    }
+  }, [user])
+
+  const submitTask = useCallback(async (submissionData: {
+    taskId: string
+    description: string
+    photos: string[]
+    location: { lat: number; lng: number } | null
+  }) => {
+    try {
+      const response = await fetch('/api/tasks/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionData)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        return { success: false, error: errorData.error || 'Failed to submit task' }
+      }
+
+      const result = await response.json()
+      if (result.success) {
+        await refreshData()
+      }
+      return result
+    } catch (err) {
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Failed to submit task'
+      }
+    }
+  }, [refreshData])
+
+  useEffect(() => {
+    refreshData()
+
+    if (memoizedOptions.enablePolling) {
+      const interval = setInterval(
+        refreshData,
+        memoizedOptions.pollingInterval
+      )
+      return () => clearInterval(interval)
+    }
+  }, [refreshData, memoizedOptions.enablePolling, memoizedOptions.pollingInterval])
+
+  return {
+    tasks,
+    userSubmissions,
+    loading,
+    error,
+    submitTask,
+    refreshData
+  }
+}
+
+// Enhanced User Data Hook that combines all data
+export function useEnhancedUserData(options?: {
+  enablePolling?: boolean
+  pollingInterval?: number
+}) {
+  // Memoize options to prevent infinite loops in child hooks
+  const memoizedOptions = useMemo(() => ({
+    enablePolling: options?.enablePolling,
+    pollingInterval: options?.pollingInterval
+  }), [options?.enablePolling, options?.pollingInterval])
+
+  const leaderboardOptions = useMemo(() => ({
+    enablePolling: memoizedOptions.enablePolling,
+    pollingInterval: memoizedOptions.pollingInterval
+  }), [memoizedOptions.enablePolling, memoizedOptions.pollingInterval])
+
+  const progress = useEnhancedUserProgress()
+  const badges = useEnhancedBadges()
+  const leaderboards = useEnhancedLeaderboards(leaderboardOptions)
+  const notifications = useEnhancedNotifications(memoizedOptions)
+
+  const loading = progress.loading || badges.loading || leaderboards.loading || notifications.loading
+  const error = progress.error || badges.error || leaderboards.error || notifications.error
+
+  const refreshData = useCallback(async () => {
+    await Promise.all([
+      progress.refresh(),
+      badges.refresh(),
+      leaderboards.refreshData(),
+      notifications.refresh()
+    ])
+  }, [progress.refresh, badges.refresh, leaderboards.refreshData, notifications.refresh])
+
+  return {
+    userProgress: progress.progress,
+    badges: {
+      availableBadges: badges.allBadges,
+      userBadges: badges.userBadges
+    },
+    leaderboards: leaderboards.leaderboards,
+    notifications: notifications.notifications,
+    loading,
+    error: error ? new Error(error) : null,
+    refreshData
   }
 }
 

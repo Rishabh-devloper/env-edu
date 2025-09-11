@@ -16,8 +16,8 @@ The platform supports four distinct user roles:
 
 #### In Clerk Dashboard:
 1. Go to your Clerk dashboard (https://dashboard.clerk.com)
-2. Navigate to **Users & Authentication** → **Public Metadata**
-3. Enable public metadata to store user roles
+2. Navigate to **Users & Authentication** → **Private Metadata**
+3. Enable private metadata to store user roles
 4. Configure sign-up/sign-in flows as needed
 
 #### Role Assignment in Clerk:
@@ -54,7 +54,7 @@ To create your first admin user:
 1. Go to your Clerk dashboard
 2. Find your user in the Users section
 3. Click on the user
-4. In Public Metadata, add: `{ "role": "admin" }`
+4. In Private Metadata, add: `{ "role": "admin" }`
 
 #### Option B: Programmatic Assignment
 ```typescript

@@ -21,30 +21,57 @@ import {
   ArrowRight,
   Gamepad2,
   TreePine,
-  Recycle
+  Recycle,
+  Bell
 } from 'lucide-react'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import NotificationCenter from '@/components/notifications/NotificationCenter'
+import { useEnhancedUserData } from '@/hooks/useEnhancedData'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import Link from 'next/link'
 
 export default function StudentDashboard() {
-  const { user, isLoaded } = useUser()
+  const { user, isLoaded, isSignedIn } = useUser()
   const { role, isStudent } = useUserRole()
   const router = useRouter()
 
+  const {
+    userProgress,
+    badges,
+    notifications,
+    loading,
+    error,
+    refreshData
+  } = useEnhancedUserData({
+    enablePolling: true,
+    pollingInterval: 30000
+  })
+
   useEffect(() => {
-    if (isLoaded && !isStudent) {
+    if (isLoaded && (!isSignedIn || !isStudent)) {
       router.push('/')
     }
-  }, [isLoaded, isStudent, router])
+  }, [isLoaded, isSignedIn, isStudent, router])
 
-  if (!isLoaded) {
+  if (!isLoaded || loading) {
     return <LoadingSpinner />
   }
 
-  if (!isStudent) {
-    return null
+  if (!isSignedIn || !isStudent) {
+    return <LoadingSpinner />
+  }
+
+  // Get real data from hooks
+  const stats = {
+    totalPoints: userProgress?.totalPoints || 0,
+    level: userProgress?.level || 1,
+    currentStreak: userProgress?.currentStreak || 0,
+    completedLessons: userProgress?.completedLessonsCount || 0,
+    badgesEarned: badges?.userBadges?.length || 0,
+    completionRate: userProgress?.completionRate || 0,
+    tasksCompleted: userProgress?.tasks?.completed || 0,
+    tasksPending: userProgress?.tasks?.pending || 0
   }
 
   return (
@@ -59,27 +86,33 @@ export default function StudentDashboard() {
         <div className="max-w-7xl mx-auto">
           {/* Enhanced Header */}
           <div className="mb-8 text-center">
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Leaf className="w-8 h-8 text-white" />
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <Leaf className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent">
+                    Welcome back, {user?.firstName}! 🌱
+                  </h1>
+                  <p className="text-green-600 font-medium">
+                    Your Environmental Impact Journey
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent">
-                  Welcome back, {user?.firstName}! 🌱
-                </h1>
-                <p className="text-green-600 font-medium">
-                  Your Environmental Impact Journey
-                </p>
+              {/* Notification Center */}
+              <div className="flex items-center space-x-4">
+                <NotificationCenter />
               </div>
             </div>
             <div className="flex justify-center space-x-6 text-sm">
               <div className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-md">
                 <Star className="w-4 h-4 text-yellow-500" />
-                <span className="font-medium text-gray-700">Level 8 - Eco Champion</span>
+                <span className="font-medium text-gray-700">Level {stats.level} - {stats.level >= 8 ? 'Eco Champion' : stats.level >= 5 ? 'Green Warrior' : 'Eco Explorer'}</span>
               </div>
               <div className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-md">
                 <Zap className="w-4 h-4 text-blue-500" />
-                <span className="font-medium text-gray-700">5 Day Streak!</span>
+                <span className="font-medium text-gray-700">{stats.currentStreak} Day Streak!</span>
               </div>
             </div>
           </div>
@@ -92,14 +125,14 @@ export default function StudentDashboard() {
                   <Trophy className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-green-800">1,875</p>
+                  <p className="text-3xl font-bold text-green-800">{stats.totalPoints.toLocaleString()}</p>
                   <p className="text-sm text-green-600">Eco Points</p>
                 </div>
               </div>
               <div className="w-full bg-green-100 rounded-full h-2 mb-2">
-                <div className="bg-gradient-to-r from-green-500 to-emerald-600 h-2 rounded-full" style={{width: '75%'}}></div>
+                <div className="bg-gradient-to-r from-green-500 to-emerald-600 h-2 rounded-full" style={{width: `${(stats.totalPoints % 500) / 5}%`}}></div>
               </div>
-              <p className="text-xs text-green-600 font-medium">125 points to next level</p>
+              <p className="text-xs text-green-600 font-medium">{500 - (stats.totalPoints % 500)} points to next level</p>
             </div>
 
             <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-blue-200 hover:shadow-2xl transition-all duration-300 hover:scale-105">
@@ -108,13 +141,13 @@ export default function StudentDashboard() {
                   <BookOpen className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-blue-800">18</p>
+                  <p className="text-3xl font-bold text-blue-800">{stats.completedLessons}</p>
                   <p className="text-sm text-blue-600">Lessons Completed</p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
                 <Play className="w-4 h-4 text-blue-500" />
-                <p className="text-xs text-blue-600 font-medium">3 interactive videos watched today</p>
+                <p className="text-xs text-blue-600 font-medium">{stats.completionRate}% completion rate</p>
               </div>
             </div>
 
@@ -124,7 +157,7 @@ export default function StudentDashboard() {
                   <Award className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-purple-800">12</p>
+                  <p className="text-3xl font-bold text-purple-800">{stats.badgesEarned}</p>
                   <p className="text-sm text-purple-600">Badges Earned</p>
                 </div>
               </div>
@@ -145,13 +178,13 @@ export default function StudentDashboard() {
                   <Target className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-orange-800">7</p>
+                  <p className="text-3xl font-bold text-orange-800">{stats.tasksCompleted}</p>
                   <p className="text-sm text-orange-600">Real Tasks Done</p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
                 <Camera className="w-4 h-4 text-orange-500" />
-                <p className="text-xs text-orange-600 font-medium">2 tasks pending review</p>
+                <p className="text-xs text-orange-600 font-medium">{stats.tasksPending} tasks pending review</p>
               </div>
             </div>
           </div>
@@ -209,11 +242,11 @@ export default function StudentDashboard() {
                 {/* Learning Progress */}
                 <div className="mt-6 p-4 bg-green-50 rounded-xl">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-green-700">Current Module: Sustainable Living</span>
-                    <span className="text-sm text-green-600">Progress: 68%</span>
+                    <span className="text-sm font-medium text-green-700">Current Module: Environmental Education</span>
+                    <span className="text-sm text-green-600">Progress: {stats.completionRate}%</span>
                   </div>
                   <div className="w-full bg-green-200 rounded-full h-2">
-                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 h-2 rounded-full" style={{width: '68%'}}></div>
+                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 h-2 rounded-full" style={{width: `${stats.completionRate}%`}}></div>
                   </div>
                 </div>
               </div>

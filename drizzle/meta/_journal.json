@@ -15,6 +15,13 @@
       "when": 1757484416295,
       "tag": "0001_friendly_cable",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1757624103829,
+      "tag": "0002_milky_sue_storm",
+      "breakpoints": true
     }
   ]
 }

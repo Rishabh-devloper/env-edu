@@ -29,57 +29,55 @@ export default function SignUpPage() {
   // Check if user just completed signup and assign role
   useEffect(() => {
     if (isLoaded && user && selectedRole && currentStep === 'clerk-signup') {
-      assignRoleToUser()
+      assignRoleToUser(selectedRole)
     }
   }, [isLoaded, user, selectedRole, currentStep])
 
-  const assignRoleToUser = async () => {
-    if (!user || !selectedRole) return
-
-    setCurrentStep('completing')
-    setIsAssigningRole(true)
-
+  const assignRoleToUser = async (role: string) => {
+    console.log('Starting role assignment for:', role);
+    setIsAssigningRole(true);
     try {
-      // Assign role to user via API
       const response = await fetch('/api/auth/assign-role', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ role: selectedRole }),
-      })
-
-      const result = await response.json()
+        body: JSON.stringify({ role }),
+      });
+  
+      const data = await response.json();
+      console.log('Role assignment response:', { status: response.status, data });
       
-      if (result.success) {
-        setIsAssigningRole(false)
-        // Small delay to show completion state
-        setTimeout(() => {
-          // Redirect to appropriate dashboard
-          const dashboardRoutes = {
-            student: '/student/dashboard',
-            teacher: '/teacher/dashboard',
-            ngo: '/ngo/dashboard',
-            admin: '/admin/dashboard'
-          }
-          router.push(dashboardRoutes[selectedRole])
-        }, 2000)
+      if (response.ok) {
+        console.log('Role assigned successfully:', data);
+        
+        // Force a page reload to ensure the session is refreshed with the new role
+        window.location.href = role === 'student' 
+          ? '/student'
+          : role === 'teacher'
+          ? '/teacher'
+          : role === 'ngo'
+          ? '/ngo'
+          : role === 'admin'
+          ? '/admin'
+          : '/';
+          
+        return true;
       } else {
-        console.error('Role assignment failed:', result.error)
-        setIsAssigningRole(false)
-        // If role assignment fails, still redirect but with default role
-        setTimeout(() => {
-          router.push('/student/dashboard')
-        }, 2000)
+        console.error('Failed to assign role:', data.error);
+        // Fallback to student page on error
+        router.push('/student');
+        return false;
       }
     } catch (error) {
-      console.error('Error assigning role:', error)
-      setIsAssigningRole(false)
-      setTimeout(() => {
-        router.push('/student/dashboard')
-      }, 2000)
+      console.error('Error assigning role:', error);
+      // Fallback to student page on error
+      router.push('/student');
+      return false;
+    } finally {
+      setIsAssigningRole(false);
     }
-  }
+  };
 
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role)
@@ -94,6 +92,20 @@ export default function SignUpPage() {
   const handleBackToRoleSelection = () => {
     setCurrentStep('role-selection')
   }
+
+  const handleConfirm = async () => {
+    if (!selectedRole) return;
+    
+    setCurrentStep('completing');
+    await assignRoleToUser(selectedRole);
+  };
+
+  // Effect to handle role assignment after signup
+  useEffect(() => {
+    if (isLoaded && user && selectedRole && currentStep === 'completing') {
+      assignRoleToUser(selectedRole);
+    }
+  }, [isLoaded, user, selectedRole, currentStep]);
 
   if (currentStep === 'completing') {
     return (

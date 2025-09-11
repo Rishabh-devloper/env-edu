@@ -22,7 +22,8 @@ import {
   Sparkles,
   Trophy,
   Flame,
-  Globe
+  Globe,
+  ArrowRight
 } from 'lucide-react'
 import QuizComponent from '@/components/content/QuizComponent'
 import VideoPlayer from '@/components/content/VideoPlayer'
@@ -115,112 +116,392 @@ export default function LearningPage() {
     {
       id: '1',
       lessonId: '1',
-      title: 'Climate Change Basics Quiz',
+      title: 'Climate Change Fundamentals',
       questions: [
         {
           id: '1',
-          question: 'What is the main cause of climate change?',
+          question: 'What is the main cause of recent climate change?',
           type: 'multiple_choice',
-          options: ['Natural cycles', 'Human activities', 'Solar radiation', 'Ocean currents'],
+          options: ['Natural solar cycles', 'Human activities', 'Volcanic eruptions', 'Ocean currents'],
           correctAnswer: 'Human activities',
-          explanation: 'Human activities, especially greenhouse gas emissions, are the primary cause of recent climate change.',
+          explanation: 'Human activities, especially burning fossil fuels and deforestation, are the primary drivers of recent climate change.',
           ecoPoints: 10
         },
         {
           id: '2',
-          question: 'True or False: Climate change only affects temperature.',
+          question: 'True or False: Climate change only affects global temperatures.',
           type: 'true_false',
           correctAnswer: 'False',
-          explanation: 'Climate change affects many aspects of the climate system, including precipitation, sea levels, and weather patterns.',
+          explanation: 'Climate change affects precipitation patterns, sea levels, extreme weather events, and entire ecosystems.',
           ecoPoints: 10
         },
         {
           id: '3',
-          question: 'Which gas is most associated with global warming?',
+          question: 'Which greenhouse gas contributes most to global warming?',
           type: 'multiple_choice',
-          options: ['Oxygen', 'Nitrogen', 'Carbon dioxide', 'Helium'],
+          options: ['Methane', 'Carbon dioxide', 'Nitrous oxide', 'Fluorinated gases'],
           correctAnswer: 'Carbon dioxide',
-          explanation: 'CO2 is the most cited greenhouse gas from human activities.',
+          explanation: 'CO2 makes up about 76% of total greenhouse gas emissions and has the largest impact on global warming.',
           ecoPoints: 10
         },
         {
           id: '4',
-          question: 'Sea-level rise is primarily caused by…',
+          question: 'What causes sea level rise?',
           type: 'multiple_choice',
-          options: ['Cooling oceans', 'Thermal expansion and ice melt', 'More rainfall', 'Less evaporation'],
-          correctAnswer: 'Thermal expansion and ice melt',
-          explanation: 'Warming oceans expand and land ice melt adds water.',
+          options: ['Only melting glaciers', 'Only thermal expansion', 'Both thermal expansion and ice melt', 'Increased rainfall'],
+          correctAnswer: 'Both thermal expansion and ice melt',
+          explanation: 'Sea level rise is caused by both thermal expansion of warming seawater and melting of land-based ice.',
           ecoPoints: 10
         },
         {
           id: '5',
-          question: 'Renewable energy includes which sources?',
+          question: 'Which of these is NOT a renewable energy source?',
           type: 'multiple_choice',
-          options: ['Coal', 'Oil', 'Solar and wind', 'Natural gas'],
-          correctAnswer: 'Solar and wind',
-          explanation: 'Solar and wind are renewable sources.',
+          options: ['Solar power', 'Wind energy', 'Natural gas', 'Hydroelectric'],
+          correctAnswer: 'Natural gas',
+          explanation: 'Natural gas is a fossil fuel and therefore not renewable, unlike solar, wind, and hydroelectric power.',
+          ecoPoints: 10
+        },
+        {
+          id: '6',
+          question: 'The Paris Agreement aims to limit global warming to how much above pre-industrial levels?',
+          type: 'multiple_choice',
+          options: ['1.0°C', '1.5°C', '2.0°C', '2.5°C'],
+          correctAnswer: '1.5°C',
+          explanation: 'The Paris Agreement aims to limit global warming to well below 2°C, preferably to 1.5°C above pre-industrial levels.',
+          ecoPoints: 10
+        },
+        {
+          id: '7',
+          question: 'True or False: Electric vehicles produce zero emissions.',
+          type: 'true_false',
+          correctAnswer: 'False',
+          explanation: 'While EVs produce no direct emissions, they may have indirect emissions from electricity generation and manufacturing.',
+          ecoPoints: 10
+        },
+        {
+          id: '8',
+          question: 'Which sector produces the most greenhouse gas emissions globally?',
+          type: 'multiple_choice',
+          options: ['Transportation', 'Agriculture', 'Energy production', 'Buildings'],
+          correctAnswer: 'Energy production',
+          explanation: 'Energy production (electricity and heat) accounts for about 25% of global greenhouse gas emissions.',
+          ecoPoints: 10
+        },
+        {
+          id: '9',
+          question: 'Deforestation contributes to climate change by:',
+          type: 'multiple_choice',
+          options: ['Releasing stored carbon', 'Reducing CO2 absorption', 'Changing local weather patterns', 'All of the above'],
+          correctAnswer: 'All of the above',
+          explanation: 'Deforestation releases stored carbon, reduces CO2 absorption capacity, and alters local weather patterns.',
+          ecoPoints: 10
+        },
+        {
+          id: '10',
+          question: 'True or False: Small islands are particularly vulnerable to climate change.',
+          type: 'true_false',
+          correctAnswer: 'True',
+          explanation: 'Small island states face existential threats from sea level rise, coastal erosion, and saltwater intrusion.',
           ecoPoints: 10
         }
       ],
-      timeLimit: 10,
+      timeLimit: 15,
       passingScore: 70,
-      ecoPoints: 50,
+      ecoPoints: 100,
       createdAt: '2024-01-01'
     },
     {
       id: '2',
       lessonId: '2',
-      title: 'Recycling Knowledge Test',
+      title: 'Recycling & Waste Management Mastery',
       questions: [
         {
           id: '1',
-          question: 'Which of the following can be recycled?',
+          question: 'Which of the following materials has the highest recycling rate?',
           type: 'multiple_choice',
-          options: ['Plastic bottles', 'Glass jars', 'Aluminum cans', 'All of the above'],
-          correctAnswer: 'All of the above',
-          explanation: 'All of these materials can be recycled when properly sorted and cleaned.',
-          ecoPoints: 15
+          options: ['Plastic bottles', 'Aluminum cans', 'Glass bottles', 'Paper'],
+          correctAnswer: 'Aluminum cans',
+          explanation: 'Aluminum cans have one of the highest recycling rates at around 70-80% globally.',
+          ecoPoints: 10
         },
         {
           id: '2',
-          question: 'Rinsing containers before recycling helps to…',
+          question: 'What does the number inside the recycling symbol on plastic containers indicate?',
           type: 'multiple_choice',
-          options: ['Reduce contamination', 'Increase weight', 'Lower value', 'None'],
-          correctAnswer: 'Reduce contamination',
-          explanation: 'Clean recyclables reduce contamination and increase processing quality.',
+          options: ['Quality grade', 'Manufacturing date', 'Resin identification code', 'Recycling difficulty'],
+          correctAnswer: 'Resin identification code',
+          explanation: 'The number indicates the type of plastic resin used, helping determine recyclability.',
           ecoPoints: 10
         },
         {
           id: '3',
-          question: 'True or False: Plastic bags can go into curbside recycling.',
+          question: 'True or False: All plastics marked with a recycling symbol can be recycled curbside.',
           type: 'true_false',
           correctAnswer: 'False',
-          explanation: "Most curbside programs don’t accept plastic bags; take them to drop-off points.",
+          explanation: 'Not all numbered plastics are accepted in curbside programs. Check local guidelines.',
           ecoPoints: 10
         },
         {
           id: '4',
-          question: 'Which symbol indicates recyclability?',
+          question: 'What is the correct order of the waste hierarchy?',
           type: 'multiple_choice',
-          options: ['Biohazard', 'Mobius loop (♻️)', 'Skull', 'No symbol'],
-          correctAnswer: 'Mobius loop (♻️)',
-          explanation: 'The Mobius loop denotes recyclability.',
+          options: ['Recycle, Reduce, Reuse', 'Reduce, Reuse, Recycle', 'Reuse, Reduce, Recycle', 'Recycle, Reuse, Reduce'],
+          correctAnswer: 'Reduce, Reuse, Recycle',
+          explanation: 'The 3 Rs are prioritized: Reduce consumption first, then Reuse items, and finally Recycle materials.',
           ecoPoints: 10
         },
         {
           id: '5',
-          question: 'Contamination in recycling bins causes…',
+          question: 'Which item should NOT go in your recycling bin?',
           type: 'multiple_choice',
-          options: ['Higher quality output', 'More items recycled', 'Loads rejected', 'No effect'],
-          correctAnswer: 'Loads rejected',
-          explanation: 'Contamination can cause entire loads to be discarded.',
+          options: ['Clean pizza box', 'Greasy pizza box', 'Newspaper', 'Empty glass jar'],
+          correctAnswer: 'Greasy pizza box',
+          explanation: 'Greasy or food-soiled cardboard cannot be recycled as the oils contaminate the recycling process.',
+          ecoPoints: 10
+        },
+        {
+          id: '6',
+          question: 'What percentage of a recycled aluminum can becomes a new can?',
+          type: 'multiple_choice',
+          options: ['50%', '75%', '95%', '100%'],
+          correctAnswer: '100%',
+          explanation: 'Aluminum can be recycled infinitely without quality loss - 100% becomes new aluminum products.',
+          ecoPoints: 10
+        },
+        {
+          id: '7',
+          question: 'True or False: Composting is a form of recycling.',
+          type: 'true_false',
+          correctAnswer: 'True',
+          explanation: 'Composting is biological recycling - organic matter is broken down and transformed into useful compost.',
+          ecoPoints: 10
+        },
+        {
+          id: '8',
+          question: 'What is "wishcycling"?',
+          type: 'multiple_choice',
+          options: ['Hoping items will be recycled', 'Putting non-recyclables in recycling bins', 'Wishing for better recycling programs', 'All of the above'],
+          correctAnswer: 'Putting non-recyclables in recycling bins',
+          explanation: 'Wishcycling is putting items in recycling bins hoping they\'ll be recycled, even when they\'re not recyclable.',
+          ecoPoints: 10
+        },
+        {
+          id: '9',
+          question: 'How many times can paper typically be recycled?',
+          type: 'multiple_choice',
+          options: ['3-5 times', '5-7 times', '7-10 times', 'Infinite times'],
+          correctAnswer: '5-7 times',
+          explanation: 'Paper fibers become shorter each time they\'re recycled, limiting recycling to about 5-7 cycles.',
+          ecoPoints: 10
+        },
+        {
+          id: '10',
+          question: 'True or False: Recycling one ton of paper saves 17 trees.',
+          type: 'true_false',
+          correctAnswer: 'True',
+          explanation: 'Recycling one ton of paper saves approximately 17 trees, along with water and energy.',
           ecoPoints: 10
         }
       ],
-      timeLimit: 15,
+      timeLimit: 20,
       passingScore: 80,
-      ecoPoints: 75,
+      ecoPoints: 120,
       createdAt: '2024-01-02'
+    },
+    {
+      id: '3',
+      lessonId: '3',
+      title: 'Renewable Energy & Sustainability',
+      questions: [
+        {
+          id: '1',
+          question: 'Which renewable energy source has the fastest growing capacity worldwide?',
+          type: 'multiple_choice',
+          options: ['Solar power', 'Wind power', 'Hydroelectric', 'Geothermal'],
+          correctAnswer: 'Solar power',
+          explanation: 'Solar power has experienced the fastest capacity growth globally in recent years.',
+          ecoPoints: 10
+        },
+        {
+          id: '2',
+          question: 'True or False: Geothermal energy can only be used in areas with hot springs.',
+          type: 'true_false',
+          correctAnswer: 'False',
+          explanation: 'Ground-source heat pumps can utilize geothermal energy almost anywhere by accessing stable ground temperatures.',
+          ecoPoints: 10
+        },
+        {
+          id: '3',
+          question: 'What is the main advantage of wind energy?',
+          type: 'multiple_choice',
+          options: ['Low maintenance costs', 'No fuel costs', 'Easy installation', 'Silent operation'],
+          correctAnswer: 'No fuel costs',
+          explanation: 'Wind energy\'s main advantage is that wind is free, resulting in very low operating costs.',
+          ecoPoints: 10
+        },
+        {
+          id: '4',
+          question: 'Which country leads the world in solar energy capacity?',
+          type: 'multiple_choice',
+          options: ['United States', 'Germany', 'China', 'Japan'],
+          correctAnswer: 'China',
+          explanation: 'China has the world\'s largest solar energy capacity, far exceeding other countries.',
+          ecoPoints: 10
+        },
+        {
+          id: '5',
+          question: 'True or False: Hydroelectric dams have no environmental impact.',
+          type: 'true_false',
+          correctAnswer: 'False',
+          explanation: 'While renewable, large dams can affect river ecosystems, fish migration, and local communities.',
+          ecoPoints: 10
+        },
+        {
+          id: '6',
+          question: 'What is biomass energy?',
+          type: 'multiple_choice',
+          options: ['Energy from radioactive materials', 'Energy from organic materials', 'Energy from minerals', 'Energy from synthetic fuels'],
+          correctAnswer: 'Energy from organic materials',
+          explanation: 'Biomass energy comes from organic materials like wood, crops, and waste that can be burned or converted to fuel.',
+          ecoPoints: 10
+        },
+        {
+          id: '7',
+          question: 'Which factor most affects solar panel efficiency?',
+          type: 'multiple_choice',
+          options: ['Panel color', 'Weather conditions', 'Panel angle and orientation', 'Installation height'],
+          correctAnswer: 'Panel angle and orientation',
+          explanation: 'Proper angle and orientation toward the sun maximizes solar panel energy production.',
+          ecoPoints: 10
+        },
+        {
+          id: '8',
+          question: 'True or False: Tidal energy is a form of renewable energy.',
+          type: 'true_false',
+          correctAnswer: 'True',
+          explanation: 'Tidal energy harnesses the natural rise and fall of ocean tides, making it a renewable energy source.',
+          ecoPoints: 10
+        },
+        {
+          id: '9',
+          question: 'What is the biggest challenge for renewable energy adoption?',
+          type: 'multiple_choice',
+          options: ['High initial costs', 'Energy storage', 'Public acceptance', 'Technical complexity'],
+          correctAnswer: 'Energy storage',
+          explanation: 'Storing renewable energy for use when sun isn\'t shining or wind isn\'t blowing remains a major challenge.',
+          ecoPoints: 10
+        },
+        {
+          id: '10',
+          question: 'True or False: Nuclear energy is considered renewable.',
+          type: 'true_false',
+          correctAnswer: 'False',
+          explanation: 'Nuclear energy uses finite uranium resources and produces radioactive waste, so it\'s not considered renewable.',
+          ecoPoints: 10
+        }
+      ],
+      timeLimit: 18,
+      passingScore: 75,
+      ecoPoints: 110,
+      createdAt: '2024-01-03'
+    },
+    {
+      id: '4',
+      lessonId: '4',
+      title: 'Biodiversity & Conservation Challenge',
+      questions: [
+        {
+          id: '1',
+          question: 'What percentage of Earth\'s species are estimated to live in tropical rainforests?',
+          type: 'multiple_choice',
+          options: ['25%', '50%', '75%', '90%'],
+          correctAnswer: '50%',
+          explanation: 'Despite covering only 6% of Earth\'s surface, tropical rainforests contain about 50% of all species.',
+          ecoPoints: 10
+        },
+        {
+          id: '2',
+          question: 'True or False: The current rate of species extinction is 100-1000 times faster than natural rates.',
+          type: 'true_false',
+          correctAnswer: 'True',
+          explanation: 'Scientists estimate current extinction rates are 100-1000 times higher than natural background rates.',
+          ecoPoints: 10
+        },
+        {
+          id: '3',
+          question: 'What is the primary cause of biodiversity loss globally?',
+          type: 'multiple_choice',
+          options: ['Climate change', 'Habitat destruction', 'Pollution', 'Invasive species'],
+          correctAnswer: 'Habitat destruction',
+          explanation: 'Habitat destruction, mainly for agriculture and urban development, is the leading cause of biodiversity loss.',
+          ecoPoints: 10
+        },
+        {
+          id: '4',
+          question: 'Which of these is NOT one of the main threats to marine biodiversity?',
+          type: 'multiple_choice',
+          options: ['Ocean acidification', 'Overfishing', 'Marine protected areas', 'Plastic pollution'],
+          correctAnswer: 'Marine protected areas',
+          explanation: 'Marine protected areas help preserve biodiversity; the others are threats to marine ecosystems.',
+          ecoPoints: 10
+        },
+        {
+          id: '5',
+          question: 'True or False: Keystone species have a disproportionately large impact on their ecosystem.',
+          type: 'true_false',
+          correctAnswer: 'True',
+          explanation: 'Keystone species play critical roles in maintaining ecosystem structure and function despite their relatively small numbers.',
+          ecoPoints: 10
+        },
+        {
+          id: '6',
+          question: 'What does CITES stand for?',
+          type: 'multiple_choice',
+          options: ['Convention on International Trade in Endangered Species', 'Conservation Initiative for Threatened Ecosystems', 'Center for International Terrestrial Studies', 'Climate Impact on Threatened Species'],
+          correctAnswer: 'Convention on International Trade in Endangered Species',
+          explanation: 'CITES regulates international trade in endangered species to prevent their exploitation.',
+          ecoPoints: 10
+        },
+        {
+          id: '7',
+          question: 'Which biome has the highest biodiversity?',
+          type: 'multiple_choice',
+          options: ['Temperate forests', 'Grasslands', 'Tropical rainforests', 'Coral reefs'],
+          correctAnswer: 'Tropical rainforests',
+          explanation: 'Tropical rainforests have the highest terrestrial biodiversity, while coral reefs have the highest marine biodiversity.',
+          ecoPoints: 10
+        },
+        {
+          id: '8',
+          question: 'True or False: Corridors connecting protected areas help wildlife conservation.',
+          type: 'true_false',
+          correctAnswer: 'True',
+          explanation: 'Wildlife corridors allow animals to move between habitats, maintain genetic diversity, and access resources.',
+          ecoPoints: 10
+        },
+        {
+          id: '9',
+          question: 'What is ecosystem service?',
+          type: 'multiple_choice',
+          options: ['Services provided to ecosystems', 'Benefits people derive from ecosystems', 'Protection services for endangered species', 'Restoration services for damaged habitats'],
+          correctAnswer: 'Benefits people derive from ecosystems',
+          explanation: 'Ecosystem services are benefits like clean water, pollination, and climate regulation that ecosystems provide to humans.',
+          ecoPoints: 10
+        },
+        {
+          id: '10',
+          question: 'True or False: Urban areas cannot support significant biodiversity.',
+          type: 'true_false',
+          correctAnswer: 'False',
+          explanation: 'Well-designed urban areas with green spaces, parks, and green roofs can support considerable biodiversity.',
+          ecoPoints: 10
+        }
+      ],
+      timeLimit: 20,
+      passingScore: 75,
+      ecoPoints: 130,
+      createdAt: '2024-01-04'
     }
   ]
 
@@ -294,7 +575,35 @@ export default function LearningPage() {
   const handleQuizComplete = async (score: number, timeSpent: number) => {
     console.log('Quiz completed:', { score, timeSpent })
     if (score >= (selectedQuiz?.passingScore || 70)) {
-      await addPoints(selectedQuiz?.ecoPoints || 0, `Completed quiz: ${selectedQuiz?.title}`)
+      const oldLevel = level
+      const pointsToAdd = selectedQuiz?.ecoPoints || 0
+      
+      try {
+        const success = await addPoints(pointsToAdd, `Completed quiz: ${selectedQuiz?.title}`, 'quiz', selectedQuiz?.id)
+        if (success) {
+          // Show achievement notification
+          setRecentAchievement(`+${pointsToAdd} points! Quiz completed: ${selectedQuiz?.title}`)
+          setTimeout(() => setRecentAchievement(null), 4000)
+          
+          // Check for level up
+          if (level > oldLevel) {
+            setLevelUpData({ newLevel: level, pointsEarned: pointsToAdd })
+            setShowLevelUp(true)
+            setTimeout(() => {
+              setShowLevelUp(false)
+              setLevelUpData(null)
+            }, 4000)
+          }
+        }
+      } catch (error) {
+        console.error('Error adding quiz points:', error)
+        setRecentAchievement(`Error: Could not add points for quiz completion`)
+        setTimeout(() => setRecentAchievement(null), 3000)
+      }
+    } else {
+      // Show encouragement for not passing
+      setRecentAchievement(`Keep trying! You need ${selectedQuiz?.passingScore || 70}% to pass and earn points.`)
+      setTimeout(() => setRecentAchievement(null), 4000)
     }
   }
 
@@ -778,51 +1087,117 @@ export default function LearningPage() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {quizzes.map((quiz, index) => (
-                  <motion.div
-                    key={quiz.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                    whileHover={{ scale: 1.02, y: -5 }}
-                    className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6 group"
-                  >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
-                        <Target className="w-6 h-6 text-yellow-600" />
-                      </div>
-                      <div>
-                          <h3 className="text-lg font-semibold text-gray-900 group-hover:text-yellow-600 transition-colors">{quiz.title}</h3>
-                        <p className="text-sm text-gray-600">{quiz.questions.length} questions</p>
-                      </div>
-                    </div>
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {quizzes.map((quiz, index) => {
+                  const difficultyColors = {
+                    easy: { bg: 'from-green-400 to-emerald-500', icon: 'bg-green-100', text: 'text-green-600' },
+                    medium: { bg: 'from-yellow-400 to-orange-500', icon: 'bg-yellow-100', text: 'text-yellow-600' },
+                    hard: { bg: 'from-red-400 to-pink-500', icon: 'bg-red-100', text: 'text-red-600' }
+                  }
                   
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
-                      <div className="flex items-center">
-                        <Clock className="w-4 h-4 mr-1" />
-                        {quiz.timeLimit} min
+                  const getDifficulty = (score: number) => {
+                    if (score >= 80) return 'hard'
+                    if (score >= 70) return 'medium'
+                    return 'easy'
+                  }
+                  
+                  const difficulty = getDifficulty(quiz.passingScore)
+                  const colorScheme = difficultyColors[difficulty as keyof typeof difficultyColors]
+                  
+                  return (
+                    <motion.div
+                      key={quiz.id}
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.15 }}
+                      whileHover={{ scale: 1.03, y: -8 }}
+                      className="group relative"
+                    >
+                      {/* Gradient Border */}
+                      <div className={`absolute inset-0 bg-gradient-to-br ${colorScheme.bg} rounded-3xl blur-sm group-hover:blur-md transition-all duration-300 opacity-75`}></div>
+                      
+                      {/* Main Card */}
+                      <div className="relative bg-white rounded-3xl p-8 shadow-xl border border-gray-100 overflow-hidden">
+                        {/* Background Pattern */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-gray-50 to-transparent rounded-full -translate-y-16 translate-x-16 opacity-50"></div>
+                        
+                        {/* Header */}
+                        <div className="flex items-start justify-between mb-6 relative z-10">
+                          <div className="flex items-center space-x-4">
+                            <div className={`w-16 h-16 ${colorScheme.icon} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                              <div className="text-2xl">
+                                {quiz.id === '1' && '🌍'}
+                                {quiz.id === '2' && '♻️'}
+                                {quiz.id === '3' && '⚡'}
+                                {quiz.id === '4' && '🌿'}
+                              </div>
+                            </div>
+                            <div>
+                              <h3 className={`text-xl font-bold text-gray-900 group-hover:${colorScheme.text} transition-colors duration-300 mb-2`}>
+                                {quiz.title}
+                              </h3>
+                              <div className="flex items-center space-x-3 text-sm text-gray-500">
+                                <span className="flex items-center">
+                                  <span className="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
+                                  {quiz.questions.length} questions
+                                </span>
+                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${colorScheme.text} bg-gray-50`}>
+                                  {difficulty.toUpperCase()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Quiz Stats */}
+                        <div className="grid grid-cols-3 gap-4 mb-6 relative z-10">
+                          <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
+                            <Clock className="w-6 h-6 text-blue-500 mx-auto mb-2" />
+                            <div className="text-lg font-bold text-blue-600">{quiz.timeLimit}</div>
+                            <div className="text-xs text-blue-600">minutes</div>
+                          </div>
+                          
+                          <div className="text-center p-3 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl border border-yellow-100">
+                            <Star className="w-6 h-6 text-yellow-500 mx-auto mb-2" />
+                            <div className="text-lg font-bold text-yellow-600">{quiz.ecoPoints}</div>
+                            <div className="text-xs text-yellow-600">eco points</div>
+                          </div>
+                          
+                          <div className="text-center p-3 bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl border border-purple-100">
+                            <Trophy className="w-6 h-6 text-purple-500 mx-auto mb-2" />
+                            <div className="text-lg font-bold text-purple-600">{quiz.passingScore}%</div>
+                            <div className="text-xs text-purple-600">to pass</div>
+                          </div>
+                        </div>
+                        
+                        {/* Description */}
+                        <div className="mb-6 relative z-10">
+                          <p className="text-gray-600 text-sm leading-relaxed">
+                            {quiz.id === '1' && 'Test your knowledge of climate science, global warming, and environmental impacts. Master the fundamentals of our changing planet.'}
+                            {quiz.id === '2' && 'Challenge yourself with advanced recycling concepts, waste reduction strategies, and circular economy principles.'}
+                            {quiz.id === '3' && 'Explore renewable energy technologies, sustainability practices, and clean energy solutions for the future.'}
+                            {quiz.id === '4' && 'Dive deep into biodiversity conservation, ecosystem services, and wildlife protection strategies.'}
+                          </p>
+                        </div>
+                        
+                        {/* Action Button */}
+                        <motion.button
+                          onClick={() => handleStartQuiz(quiz)}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className={`w-full bg-gradient-to-r ${colorScheme.bg} hover:shadow-2xl text-white py-4 px-6 rounded-2xl font-bold text-lg transition-all duration-300 shadow-lg hover:scale-105 transform relative z-10 flex items-center justify-center space-x-3`}
+                        >
+                          <span>🚀</span>
+                          <span>Start Quiz Challenge</span>
+                          <ArrowRight className="w-5 h-5" />
+                        </motion.button>
+                        
+                        {/* Hover Effect Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl"></div>
                       </div>
-                      <div className="flex items-center">
-                          <Star className="w-4 h-4 mr-1 text-yellow-500" />
-                        {quiz.ecoPoints} points
-                      </div>
-                    </div>
-                  </div>
-
-                    <motion.button
-                    onClick={() => handleStartQuiz(quiz)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 px-4 rounded-xl font-medium transition-colors shadow-lg hover:shadow-xl"
-                  >
-                    Start Quiz
-                    </motion.button>
-                  </motion.div>
-              ))}
+                    </motion.div>
+                  )
+                })}
             </div>
             </motion.div>
         )}

@@ -22,7 +22,7 @@ interface PointsContextType {
   completionRate: number
   streak: number
   nextLevelPoints: number
-  addPoints: (points: number, reason: string) => void
+  addPoints: (points: number, reason: string, activityType?: string, activityId?: string) => Promise<boolean>
   addBadge: (badgeId: string) => void
   completeLesson: (lessonId: string, points: number) => Promise<boolean>
   isLoading: boolean
@@ -89,8 +89,8 @@ export function PointsProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const addPoints = async (points: number, reason: string) => {
-    if (!user) return
+  const addPoints = async (points: number, reason: string, activityType?: string, activityId?: string): Promise<boolean> => {
+    if (!user) return false
     
     try {
       const response = await fetch('/api/progress', {
@@ -99,24 +99,27 @@ export function PointsProvider({ children }: { children: ReactNode }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          action: 'update_points',
           points,
-          reason
+          reason,
+          activityType,
+          activityId
         })
       })
 
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
-          setTotalPoints(data.data.totalPoints)
-          setLevel(data.data.level)
+          setTotalPoints(data.totalPoints)
+          setLevel(data.level)
           
           // Show level up notification if applicable
-          if (data.data.leveledUp) {
-            console.log(`🎉 Level up! You're now level ${data.data.level}`)
+          if (data.leveledUp) {
+            console.log(`🎉 Level up! You're now level ${data.level}`)
           }
+          return true
         }
       }
+      return false
     } catch (error) {
       console.error('Error adding points:', error)
       // Fallback to local state update
@@ -126,6 +129,7 @@ export function PointsProvider({ children }: { children: ReactNode }) {
         setLevel(newLevel)
         return newPoints
       })
+      return true // Consider fallback as success
     }
   }
 

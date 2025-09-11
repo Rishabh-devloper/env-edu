@@ -21,6 +21,7 @@ import {
 import { useUser, SignOutButton } from '@clerk/nextjs'
 import { useUserRole } from '@/lib/auth'
 import { useRouter } from 'next/navigation'
+import NotificationCenter from './notifications/NotificationCenter'
 
 export default function Header() {
   const { isSignedIn, user } = useUser()
@@ -52,12 +53,8 @@ export default function Header() {
     router.push('/sign-up')
   }
 
-  const dashboardLink = {
-    student: '/student/dashboard',
-    teacher: '/teacher/dashboard', 
-    ngo: '/ngo/dashboard',
-    admin: '/admin/dashboard'
-  }[role || 'student']
+  // Always use main landing page for dashboard - it will show role-specific content
+  const dashboardLink = '/'
 
   const navigationItems = [
     { name: 'Home', href: '/', icon: Home, show: true },
@@ -108,7 +105,11 @@ export default function Header() {
             {/* User Section */}
             <div className="flex items-center space-x-3">
               {isSignedIn ? (
-                <div className="relative" ref={userMenuRef}>
+                <>
+                  {/* Notification Center */}
+                  <NotificationCenter className="" />
+                  
+                  <div className="relative" ref={userMenuRef}>
                   {/* User Menu Button */}
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -218,7 +219,8 @@ export default function Header() {
                       </div>
                     </div>
                   )}
-                </div>
+                  </div>
+                </>
               ) : (
                 <div className="flex items-center space-x-3">
                   <button
