@@ -137,7 +137,7 @@ export interface Certificate {
   type: 'completion' | 'achievement' | 'participation'
   title: string
   description: string
-  issuedAt: string
-  validUntil?: string
+  issuedAt: Date
+  validUntil?: Date
   certificateUrl: string
 }

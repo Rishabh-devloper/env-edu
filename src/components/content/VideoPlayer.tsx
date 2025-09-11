@@ -188,14 +188,14 @@ export default function VideoPlayer({ src, title, onComplete, onProgress, resume
           />
         </div>
       ) : (
-        <video
-          ref={videoRef}
-          src={src}
-          className="w-full h-full"
-          poster="/api/placeholder/800/450"
-          onClick={togglePlay}
+      <video
+        ref={videoRef}
+        src={src}
+        className="w-full h-full"
+        poster="/api/placeholder/800/450"
+        onClick={togglePlay}
           controls={false}
-        />
+      />
       )}
 
       {/* Video Overlay */}
@@ -213,8 +213,8 @@ export default function VideoPlayer({ src, title, onComplete, onProgress, resume
       {/* Controls */}
       {!isYouTube && (
         <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-emerald-950/90 to-transparent p-4 transition-opacity duration-300 ${
-          showControls ? 'opacity-100' : 'opacity-0'
-        }`}>
+        showControls ? 'opacity-100' : 'opacity-0'
+      }`}>
         {/* Progress Bar */}
         <div className="mb-4">
           <input
@@ -290,7 +290,7 @@ export default function VideoPlayer({ src, title, onComplete, onProgress, resume
             </button>
           </div>
         </div>
-        </div>
+      </div>
       )}
 
       {/* Video Title */}
@@ -302,7 +302,7 @@ export default function VideoPlayer({ src, title, onComplete, onProgress, resume
 
       {/* Progress Indicator */}
       {!isYouTube && (
-        <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4">
         <div className="bg-emerald-900/70 backdrop-blur px-3 py-1 rounded text-green-100 text-sm">
           {Math.round(progress)}% Complete
         </div>

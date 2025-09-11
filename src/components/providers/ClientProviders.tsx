@@ -1,0 +1,16 @@
+'use client'
+
+import { PointsProvider } from '@/contexts/PointsContext'
+import { ReactNode } from 'react'
+
+interface ClientProvidersProps {
+  children: ReactNode
+}
+
+export default function ClientProviders({ children }: ClientProvidersProps) {
+  return (
+    <PointsProvider>
+      {children}
+    </PointsProvider>
+  )
+}

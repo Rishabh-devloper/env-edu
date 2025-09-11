@@ -195,7 +195,7 @@ export default function LearningPage() {
           question: 'True or False: Plastic bags can go into curbside recycling.',
           type: 'true_false',
           correctAnswer: 'False',
-          explanation: 'Most curbside programs don’t accept plastic bags; take them to drop-off points.',
+          explanation: "Most curbside programs don’t accept plastic bags; take them to drop-off points.",
           ecoPoints: 10
         },
         {

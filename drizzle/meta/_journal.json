@@ -8,6 +8,13 @@
       "when": 1757353637014,
       "tag": "0000_fluffy_storm",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1757484416295,
+      "tag": "0001_friendly_cable",
+      "breakpoints": true
     }
   ]
 }

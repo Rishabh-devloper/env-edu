@@ -2,34 +2,101 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 
 // Mock data - in production, this would come from a database
-const tasks = [
+const mockTasks = [
   {
     id: '1',
-    title: 'Plant a Tree',
-    description: 'Plant a tree in your community and document the process',
-    instructions: '1. Choose a suitable location for planting\n2. Dig a hole twice the size of the root ball\n3. Place the tree and fill with soil\n4. Water thoroughly\n5. Take a photo of the planted tree',
-    ecoPoints: 100,
-    deadline: new Date('2024-12-31'),
-    proofType: 'photo',
-    assignedBy: 'teacher-1',
-    assignedTo: ['student-1', 'student-2', 'student-3'],
-    submissions: [],
-    status: 'active',
-    createdAt: new Date('2024-01-01')
+    title: 'Plant a Tree in Your Neighborhood',
+    description: 'Plant a sapling and document its growth over time with weekly photos',
+    category: 'conservation',
+    points: 200,
+    difficulty: 'medium' as const,
+    estimatedTime: '2-3 hours',
+    instructions: [
+      'Choose a suitable location with proper sunlight and space',
+      'Dig a hole twice the width of the root ball',
+      'Plant the sapling at the correct depth',
+      'Water thoroughly and add mulch around the base',
+      'Take before and after photos, including location details'
+    ],
+    submissionType: 'photo' as const,
+    status: 'available' as const,
+    createdAt: new Date().toISOString()
   },
   {
-    id: '2',
-    title: 'Recycling Challenge',
-    description: 'Collect and properly sort recyclable materials for one week',
-    instructions: '1. Set up separate bins for different materials\n2. Collect recyclables for 7 days\n3. Take photos of your sorted materials\n4. Document the total weight collected',
-    ecoPoints: 75,
-    deadline: new Date('2024-12-31'),
-    proofType: 'photo',
-    assignedBy: 'teacher-1',
-    assignedTo: ['student-1', 'student-2'],
-    submissions: [],
-    status: 'active',
-    createdAt: new Date('2024-01-02')
+    id: '2', 
+    title: 'Document Local Pollution Sources',
+    description: 'Identify and photograph environmental issues in your community',
+    category: 'awareness',
+    points: 150,
+    difficulty: 'easy' as const,
+    estimatedTime: '1-2 hours',
+    instructions: [
+      'Walk through different areas of your neighborhood',
+      'Take photos of pollution sources (air, water, soil, noise)',
+      'Note the location and time of each observation',
+      'Describe the type and severity of pollution',
+      'Suggest possible solutions or improvements'
+    ],
+    submissionType: 'both' as const,
+    status: 'available' as const,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '3',
+    title: 'Organize a Recycling Drive',
+    description: 'Collect and properly sort recyclable materials in your area',
+    category: 'recycling',
+    points: 300,
+    difficulty: 'hard' as const,
+    estimatedTime: '4-6 hours',
+    instructions: [
+      'Plan and organize a community recycling event',
+      'Set up collection points for different materials',
+      'Educate participants about proper sorting',
+      'Weigh and document collected materials',
+      'Ensure proper disposal at recycling centers'
+    ],
+    submissionType: 'both' as const,
+    status: 'available' as const,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '4',
+    title: 'Energy Audit at Home',
+    description: 'Conduct a comprehensive energy usage assessment',
+    category: 'energy',
+    points: 180,
+    difficulty: 'medium' as const,
+    estimatedTime: '2-3 hours',
+    instructions: [
+      'Check all electrical appliances and their usage',
+      'Measure electricity consumption over a week',
+      'Identify energy-wasting practices',
+      'Create an energy-saving action plan',
+      'Implement changes and measure improvements'
+    ],
+    submissionType: 'text' as const,
+    status: 'available' as const,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '5',
+    title: 'Beach/Park Cleanup Initiative',
+    description: 'Organize and execute a local cleanup drive',
+    category: 'conservation',
+    points: 250,
+    difficulty: 'medium' as const,
+    estimatedTime: '3-4 hours',
+    instructions: [
+      'Choose a local beach, park, or natural area',
+      'Gather volunteers and cleaning supplies',
+      'Document the before state with photos',
+      'Collect and sort waste materials',
+      'Take after photos and report collected amounts'
+    ],
+    submissionType: 'photo' as const,
+    status: 'available' as const,
+    createdAt: new Date().toISOString()
   }
 ]
 
@@ -45,19 +112,14 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const assignedTo = searchParams.get('assignedTo')
 
-    let filteredTasks = tasks
-
-    if (status) {
-      filteredTasks = filteredTasks.filter(task => task.status === status)
-    }
-
-    if (assignedTo === 'me') {
-      filteredTasks = filteredTasks.filter(task => task.assignedTo.includes(userId))
-    }
-
+    // Return all available tasks for demo
+    // In production, you would filter based on user permissions, status, etc.
+    
     return NextResponse.json({
       success: true,
-      data: filteredTasks
+      tasks: mockTasks,
+      totalTasks: mockTasks.length,
+      availableTasks: mockTasks.filter(task => task.status === 'available').length
     })
   } catch (error) {
     console.error('Error fetching tasks:', error)

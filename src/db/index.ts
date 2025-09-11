@@ -7,7 +7,13 @@ if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL is not set')
 }
 
-const sql = neon(process.env.DATABASE_URL)
+// Fix the connection string by properly encoding it
+const connectionString = process.env.DATABASE_URL.replace(/\?(.*)$/, (match) => {
+  // Keep the question mark but encode the query parameters
+  return '?' + match.substring(1).replace(/&/g, '%26')
+})
+
+const sql = neon(connectionString)
 export const db = drizzle(sql, { schema })
 export type DbClient = typeof db
 

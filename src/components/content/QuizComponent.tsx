@@ -1,3 +1,6 @@
+
+
+
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -6,7 +9,7 @@ import { CheckCircle, XCircle, Clock, Award } from 'lucide-react'
 
 interface QuizComponentProps {
   quiz: Quiz
-  onComplete: (score: number, timeSpent: number) => void
+  onComplete: (score: number, timeSpent: number, answers: Array<{questionId: string; answer: string | string[] | number; isCorrect: boolean; timeSpent: number}>) => void
   onExit: () => void
 }
 
@@ -44,7 +47,13 @@ export default function QuizComponent({ quiz, onComplete, onExit }: QuizComponen
       setIsSubmitted(true)
       setScore(finalScore)
       setShowResults(true)
-      onComplete(finalScore, totalSeconds)
+      const answers = quiz.questions.map(q => ({
+        questionId: q.id,
+        answer: selectedAnswers[q.id] || '',
+        isCorrect: selectedAnswers[q.id] === q.correctAnswer,
+        timeSpent: 0
+      }))
+      onComplete(finalScore, totalSeconds, answers)
     }
   }, [timeLeft, isSubmitted])
 
@@ -90,7 +99,16 @@ export default function QuizComponent({ quiz, onComplete, onExit }: QuizComponen
     
     // Calculate time spent
     const timeSpent = (quiz.timeLimit * 60) - timeLeft
-    onComplete(finalScore, timeSpent)
+    
+    // Prepare answers for submission
+    const answers = quiz.questions.map(q => ({
+      questionId: q.id,
+      answer: selectedAnswers[q.id] || '',
+      isCorrect: selectedAnswers[q.id] === q.correctAnswer,
+      timeSpent: 0 // Could be enhanced to track per-question time
+    }))
+    
+    onComplete(finalScore, timeSpent, answers)
   }
 
   const currentQ = quiz.questions[currentQuestion]

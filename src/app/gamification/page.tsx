@@ -70,7 +70,6 @@ export default function GamificationPage() {
           })
           
           setAllBadges(badgesWithEarnedInfo)
-          setBadges(Array.from(userBadgesMap.keys()))
         }
       } catch (error) {
         console.error('Error fetching badges:', error)

@@ -4,6 +4,8 @@ import { getLessons, createLesson } from '@/db/actions/lessons'
 import { SelectLesson, InsertLesson } from '@/db/schema'
 import { db } from '@/db'
 import { lessons as lessonsTable } from '@/db/schema'
+import { authenticateAPI, hasRoleAccess, AuthErrors } from '@/lib/api-auth'
+import { UserRole } from '@/types'
 
 export async function GET(request: NextRequest) {
   try {
@@ -148,14 +150,16 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth()
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // Authenticate user and check role
+    const user = await authenticateAPI()
+    if (!user) {
+      return AuthErrors.UNAUTHORIZED()
     }
 
-    // Check if user is teacher or admin
-    // This would be implemented with proper role checking
+    // Only teachers and admins can create lessons
+    if (!hasRoleAccess(user.role, ['teacher', 'admin'])) {
+      return AuthErrors.FORBIDDEN(['teacher', 'admin'], user.role)
+    }
     
     const body = await request.json()
     const { title, description, content, type, mediaUrl, duration, difficulty, ecoPoints, prerequisites, tags } = body

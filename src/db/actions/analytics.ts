@@ -126,20 +126,14 @@ export async function addPoints(points: number, reason: string, activityType: st
   const [progress] = await db.select().from(userProgress).where(eq(userProgress.userId, userId))
   if (!progress) throw new Error('User progress not found')
 
-  // Calculate if this will cause a level up
-  const currentLevel = progress.level
-  const newTotalPoints = progress.totalPoints + points
-  const newLevel = Math.floor(newTotalPoints / 100) + 1
-  const levelUp = newLevel > currentLevel
-
   // Update user progress and log points in a transaction
   await db.transaction(async (tx) => {
     // Update user progress
     await tx
       .update(userProgress)
       .set({
-        totalPoints: newTotalPoints,
-        level: newLevel,
+        totalPoints: progress.totalPoints + points,
+        level: Math.floor((progress.totalPoints + points) / 100) + 1,
         updatedAt: new Date(),
       })
       .where(eq(userProgress.userId, userId))
@@ -156,13 +150,7 @@ export async function addPoints(points: number, reason: string, activityType: st
     })
   })
 
-  return { 
-    success: true, 
-    points,
-    totalPoints: newTotalPoints,
-    level: newLevel,
-    levelUp 
-  }
+  return { success: true, points }
 }
 
 // Get user progress

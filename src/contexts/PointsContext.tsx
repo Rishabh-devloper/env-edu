@@ -50,26 +50,19 @@ export function PointsProvider({ children }: { children: ReactNode }) {
 
   const fetchUserProgress = async () => {
     try {
-      // Fetch user stats from our new server action
-      const statsResponse = await fetch('/api/progress')
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json()
-        if (statsData.success) {
-          const progress = statsData.data
+      const response = await fetch('/api/progress')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          const progress: UserProgress = data.data
           setTotalPoints(progress.totalPoints)
           setLevel(progress.level)
-          setCompletedLessons(progress.completedLessons || [])
-          setCompletionRate(progress.completionRate || 0)
-          setStreak(progress.streak || 0)
-          setNextLevelPoints((progress.level * 100) - progress.totalPoints % 100)
+          setBadges(progress.badges)
+          setCompletedLessons(progress.completedLessons)
+          setCompletionRate(progress.completionRate)
+          setStreak(progress.streak)
+          setNextLevelPoints(progress.nextLevelPoints)
         }
-      }
-      
-      // Fetch user badges from our new badges API
-      const badgesResponse = await fetch('/api/badges?action=user')
-      if (badgesResponse.ok) {
-        const badgesData = await badgesResponse.json()
-        setBadges(badgesData.badges || [])
       }
     } catch (error) {
       console.error('Error fetching user progress:', error)
@@ -100,30 +93,27 @@ export function PointsProvider({ children }: { children: ReactNode }) {
     if (!user) return
     
     try {
-      // Use our new server action for adding points
       const response = await fetch('/api/progress', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          action: 'update_points',
           points,
-          reason,
-          activityType: 'general',
-          activityId: 'manual_addition'
+          reason
         })
       })
 
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
-          // Refresh user progress to get updated values
-          await fetchUserProgress()
+          setTotalPoints(data.data.totalPoints)
+          setLevel(data.data.level)
           
-          // Show level up notification if the level changed
-          const newLevel = Math.floor(data.totalPoints / 100) + 1
-          if (newLevel > level) {
-            console.log(`🎉 Level up! You're now level ${newLevel}`)
+          // Show level up notification if applicable
+          if (data.data.leveledUp) {
+            console.log(`🎉 Level up! You're now level ${data.data.level}`)
           }
         }
       }
@@ -188,23 +178,21 @@ export function PointsProvider({ children }: { children: ReactNode }) {
     if (!user || badges.includes(badgeId)) return
     
     try {
-      // Use our new badges API endpoint
-      const response = await fetch('/api/badges', {
+      const response = await fetch('/api/progress', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          badgeId,
-          points: 10 // Default points for earning a badge
+          action: 'add_badge',
+          badgeId
         })
       })
 
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
-          // Refresh user progress to get updated values
-          await fetchUserProgress()
+          setBadges(data.data.badges)
         }
       }
     } catch (error) {
